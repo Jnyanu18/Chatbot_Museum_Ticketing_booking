@@ -4,9 +4,6 @@ export type User = {
   email?: string | null;
   phone?: string | null;
   role: 'visitor' | 'staff' | 'admin';
-  language?: string;
-  createdAt: Date;
-  lastSeen: Date;
 };
 
 export type Museum = {
@@ -51,9 +48,9 @@ export type Booking = {
   eventTitle: string;
   museumName: string;
   eventDate: string;
-  slot: string;
-  paymentId: string;
-  qrId: string;
+  slot?: string;
+  paymentId?: string;
+  qrId?: string;
 };
 
 export type Promotion = {

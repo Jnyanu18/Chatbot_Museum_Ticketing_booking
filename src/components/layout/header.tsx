@@ -1,13 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Building2, Menu } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Building2, Menu, LogOut } from "lucide-react";
+import { useUser, useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { USER } from "@/lib/data";
+import { Skeleton } from "../ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -16,6 +28,14 @@ const navLinks = [
 
 export default function Header() {
   const pathname = usePathname();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -79,10 +99,44 @@ export default function Header() {
         </Sheet>
         
         <div className="flex flex-1 items-center justify-end space-x-2">
-            {USER ? (
-                 <Button asChild>
-                    <Link href="/dashboard">Dashboard</Link>
-                </Button>
+            {isUserLoading ? (
+              <div className="flex items-center space-x-2">
+                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-8 w-20" />
+              </div>
+            ) : user ? (
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
+                        <AvatarFallback>{user.displayName?.charAt(0) ?? user.email?.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                      Dashboard
+                    </DropdownMenuItem>
+                     <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             ) : (
                 <>
                     <Button variant="ghost" asChild>

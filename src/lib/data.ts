@@ -1,13 +1,12 @@
 import type { Museum, Event, Booking, User, Promotion } from './types';
 
+// This USER constant is for placeholder purposes.
+// In a real app, you would get the user from your auth provider.
 export const USER: User = {
     id: 'user-123',
     displayName: 'Alex Doe',
     email: 'alex.doe@example.com',
     role: 'admin',
-    language: 'en',
-    createdAt: new Date(),
-    lastSeen: new Date(),
 };
 
 export const MUSEUMS: Museum[] = [

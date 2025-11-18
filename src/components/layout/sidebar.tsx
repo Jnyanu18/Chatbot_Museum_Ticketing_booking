@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   AreaChart,
   BarChart,
@@ -20,6 +20,8 @@ import {
   Percent,
   PlusCircle,
 } from 'lucide-react';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 import {
   Sidebar,
@@ -36,10 +38,9 @@ import {
   SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { USER } from '@/lib/data';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
+import { Skeleton } from '../ui/skeleton';
 
 const commonLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: AreaChart },
@@ -57,10 +58,21 @@ const adminLinks = [
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
-  const isAdmin = USER.role === 'admin';
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+  
+  // This is a placeholder for role management.
+  // In a real app, this would come from custom claims or a database lookup.
+  const isAdmin = true; 
 
   const isActive = (href: string) => {
     return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
   };
   
   return (
@@ -95,32 +107,6 @@ export default function DashboardSidebar() {
             <SidebarGroup>
                 <SidebarGroupLabel>Admin</SidebarGroupLabel>
                 <SidebarMenu>
-                    <Collapsible>
-                        <SidebarMenuItem>
-                             <CollapsibleTrigger asChild>
-                                 <SidebarMenuButton
-                                    isActive={pathname.startsWith('/dashboard/analytics')}
-                                    tooltip={{ children: "Analytics" }}
-                                    className="justify-between"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <BarChart />
-                                        <span>Analytics</span>
-                                    </div>
-                                </SidebarMenuButton>
-                             </CollapsibleTrigger>
-                        </SidebarMenuItem>
-                        <CollapsibleContent>
-                            <SidebarMenuSub>
-                                <SidebarMenuSubItem>
-                                    <SidebarMenuSubButton asChild isActive={pathname === '/dashboard/analytics'}>
-                                        <Link href="/dashboard/analytics">Overview</Link>
-                                    </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                            </SidebarMenuSub>
-                        </CollapsibleContent>
-                    </Collapsible>
-
                     {adminLinks.map(link => (
                         <SidebarMenuItem key={link.href}>
                             <SidebarMenuButton
@@ -148,22 +134,32 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip={{ children: 'Logout' }} className="text-red-400 hover:bg-red-500/10 hover:text-red-400">
-                    <Link href="/login"><LogOut /> <span>Logout</span></Link>
+                <SidebarMenuButton onClick={handleLogout} tooltip={{ children: 'Logout' }} className="text-red-400 hover:bg-red-500/10 hover:text-red-400">
+                    <LogOut /> <span>Logout</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         <Separator className="my-2" />
-        <div className="flex items-center gap-3 p-2">
-            <Avatar>
-                <AvatarImage src={`https://i.pravatar.cc/150?u=${USER.id}`} />
-                <AvatarFallback>{USER.displayName?.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col overflow-hidden">
-                <span className="font-medium truncate">{USER.displayName}</span>
-                <span className="text-xs text-sidebar-foreground/70 truncate">{USER.email}</span>
+        { isUserLoading ? (
+            <div className="flex items-center gap-3 p-2">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex flex-col gap-1 w-full">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                </div>
             </div>
-        </div>
+        ) : user ? (
+            <div className="flex items-center gap-3 p-2">
+                <Avatar>
+                    <AvatarImage src={user.photoURL ?? `https://i.pravatar.cc/150?u=${user.uid}`} />
+                    <AvatarFallback>{user.displayName?.charAt(0) ?? user.email?.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col overflow-hidden">
+                    <span className="font-medium truncate">{user.displayName}</span>
+                    <span className="text-xs text-sidebar-foreground/70 truncate">{user.email}</span>
+                </div>
+            </div>
+        ) : null}
       </SidebarFooter>
     </Sidebar>
   );
