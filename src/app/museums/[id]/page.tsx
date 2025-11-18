@@ -130,7 +130,9 @@ export default function MuseumDetailPage({ params }: { params: { id: string } })
                            </CardContent>
                            <CardContent className="p-4 pt-0 flex justify-between items-center">
                                 <span className="text-lg font-bold">${event.basePrice}</span>
-                                <Button>Book Tickets</Button>
+                                <Button asChild>
+                                  <Link href={`/dashboard/new-booking?museumId=${event.museumId}&eventId=${event.id}`}>Book Tickets</Link>
+                                </Button>
                            </CardContent>
                         </Card>
                       )

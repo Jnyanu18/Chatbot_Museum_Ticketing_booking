@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { MUSEUMS, EVENTS } from '@/lib/data';
+import { MUSEUMS, EVENTS, USER } from '@/lib/data';
 import { Ticket } from 'lucide-react';
 import { useFirestore } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase';
@@ -15,11 +16,24 @@ import { collection } from 'firebase/firestore';
 
 export default function NewBookingPage() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+
   const [selectedMuseum, setSelectedMuseum] = useState('');
   const [selectedEvent, setSelectedEvent] = useState('');
   const [numTickets, setNumTickets] = useState(1);
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState(USER.id);
   const firestore = useFirestore();
+
+  useEffect(() => {
+    const museumId = searchParams.get('museumId');
+    const eventId = searchParams.get('eventId');
+    if (museumId) {
+      setSelectedMuseum(museumId);
+    }
+    if (eventId) {
+      setSelectedEvent(eventId);
+    }
+  }, [searchParams]);
 
   const handleCreateBooking = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +78,6 @@ export default function NewBookingPage() {
     setSelectedMuseum('');
     setSelectedEvent('');
     setNumTickets(1);
-    setUserId('');
   };
 
   const filteredEvents = selectedMuseum ? EVENTS.filter(event => event.museumId === selectedMuseum) : [];
@@ -125,6 +138,7 @@ export default function NewBookingPage() {
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
                   placeholder="e.g., user-123"
+                  disabled
                 />
               </div>
               <div className="space-y-2">
