@@ -21,6 +21,10 @@ export default function MuseumDetailPage({ params }: { params: { id: string } })
   const museumImage = PlaceHolderImages.find((p) => p.id === museum.id);
   const museumEvents = EVENTS.filter(e => e.museumId === museum.id);
 
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${museum.location.address}, ${museum.location.city}, ${museum.location.country}`
+  )}`;
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
@@ -81,7 +85,11 @@ export default function MuseumDetailPage({ params }: { params: { id: string } })
                 <CardContent>
                   <p>{museum.location.address},</p>
                   <p>{museum.location.city}, {museum.location.country}</p>
-                   <Button variant="outline" className="w-full mt-4">Get Directions</Button>
+                   <Button asChild variant="outline" className="w-full mt-4">
+                     <Link href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+                        Get Directions
+                     </Link>
+                   </Button>
                 </CardContent>
               </Card>
             </div>
