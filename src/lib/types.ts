@@ -51,6 +51,9 @@ export type Booking = {
   eventTitle: string;
   museumName: string;
   eventDate: string;
+  slot: string;
+  paymentId: string;
+  qrId: string;
 };
 
 export type Promotion = {
