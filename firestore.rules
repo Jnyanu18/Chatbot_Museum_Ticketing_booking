@@ -1,0 +1,233 @@
+/**
+ * @file Firestore Security Rules for a Museum Ticketing System
+ * @description This ruleset enforces a strict user-ownership model for user-specific data while allowing public read access to museum and event information.
+ *
+ * Core Philosophy:
+ *  - Strict user-ownership for data under `/users/{userId}`. Only the authenticated user can read and write their own data.
+ *  - Public read access for museum, event, and promotion data. Anyone can read this information.
+ *  - Backend-only write access for payment information, chat intents, and daily metrics.
+ *  - Role-based access for admin and staff, managed by the existence of documents in `/roles_admin/{uid}` and `/roles_staff/{uid}`.
+ *
+ * Data Structure:
+ *  - User profiles: `/users/{userId}`
+ *  - Bookings (user-specific): `/users/{userId}/bookings/{bookingId}`
+ *  - Chat intents (user-specific): `/users/{userId}/chat_intents/{intentId}`
+ *  - Museums: `/museums/{museumId}`
+ *  - Events: `/events/{eventId}`
+ *  - Bookings: `/bookings/{bookingId}`
+ *  - Payments: `/payments/{paymentId}`
+ *  - Tickets: `/tickets/{ticketId}`
+ *  - Analytics: `/analytics/dailyMetrics/{dateDoc}`
+ *  - Promotions: `/promotions/{promoId}`
+ *  - Admin Roles: `/roles_admin/{uid}`
+ *  - Staff Roles: `/roles_staff/{uid}`
+ *
+ * Key Security Decisions:
+ *  - User listing is disabled.
+ *  - Read-only collections include analytics data.
+ *  - Payments and ChatIntents collections are write-protected and can only be created by trusted back-end processes.
+ *  - The 'museumId' is duplicated in the 'events', 'bookings', and 'promotions' collections to avoid needing to query the 'museums' collection to determine access rights for these entities.
+ *  - Admin and staff roles are managed via dedicated collections like `/roles_admin/{uid}` and `/roles_staff/{uid}`, enabling existence-based security rules.
+ *
+ * Denormalization for Authorization:
+ *  - The `museumId` is denormalized into `events`, `bookings`, and `promotions` documents. This allows rules to validate access based on `museumId` without performing costly `get()` operations.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Checks if the request is made by a user that exists as an admin.
+     * @return {bool} True if the request is from a user that is an admin.
+     */
+    function isAdmin() {
+        return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * @description Checks if the request is made by a user that exists as staff.
+     * @return {bool} True if the request is from a user that is staff.
+     */
+    function isStaff() {
+        return exists(/databases/$(database)/documents/roles_staff/$(request.auth.uid));
+    }
+
+    /**
+     * @description Checks if the user is signed in.
+     * @return {bool} True if the user is signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user ID matches the provided user ID.
+     * @param {string} userId - The user ID to compare against the authenticated user's ID.
+     * @return {bool} True if the user is signed in and the user IDs match.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user is the owner and the document exists.
+     * @param {string} userId - The user ID to compare against the authenticated user's ID.
+     * @return {bool} True if the user is the owner and the document exists.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rule for /users/{userId} documents.
+     * @path /users/{userId}
+     * @allow (create) - Authenticated user with matching userId can create their profile.
+     * @allow (get, update, delete) - Authenticated user with matching userId can get, update and delete their profile.
+     * @deny (create) - Authenticated user with non-matching userId cannot create a profile.
+     * @deny (update, delete) - Authenticated user with non-matching userId cannot update or delete another profile.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rule for /museums/{museumId} documents.
+     * @path /museums/{museumId}
+     * @allow (get, list) - Any user can read museum information.
+     * @deny (create, update, delete) - Only authenticated user can create, update or delete museum information.
+     * @principle Allows public read access while restricting write access.
+     */
+    match /museums/{museumId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Rule for /events/{eventId} documents.
+     * @path /events/{eventId}
+     * @allow (get, list) - Any user can read event information.
+     * @deny (create, update, delete) - Only authenticated user can create, update or delete event information.
+     * @principle Allows public read access while restricting write access.
+     */
+    match /events/{eventId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Rule for /users/{userId}/bookings/{bookingId} documents.
+     * @path /users/{userId}/bookings/{bookingId}
+     * @allow (get, list) - Authenticated user with matching userId can read their bookings.
+     * @allow (create, update, delete) - Authenticated user with matching userId can create, update and delete their bookings.
+     * @deny (create) - Authenticated user with non-matching userId cannot create a booking.
+     * @deny (update, delete) - Authenticated user with non-matching userId cannot update or delete another user's booking.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
+     */
+    match /users/{userId}/bookings/{bookingId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rule for /payments/{paymentId} documents.
+     * @path /payments/{paymentId}
+     * @allow (get) - Authenticated user with matching userId can read their payments.
+     * @deny (list, create, update, delete) - Only the backend can list, create, update, and delete payment information.
+     * @principle Restricts write access to the backend and read access to the owner.
+     */
+    match /payments/{paymentId} {
+      allow get: if isSignedIn() && request.auth.uid == resource.data.userId;
+      allow list, create, update, delete: if false;
+    }
+
+    /**
+     * @description Rule for /tickets/{qrId} documents.
+     * @path /tickets/{qrId}
+     * @allow (get) - Any user can get ticket information.
+     * @allow (update) - Only staff and admins can update 'checkedInAt'.
+     * @deny (list, create, delete) - Only authenticated user can list, create or delete ticket information.
+     * @principle Allows public read access while restricting write access to staff and admins.
+     */
+    match /tickets/{qrId} {
+      allow get: if true;
+      allow list, create, delete: if false;
+      allow update: if isStaff() || isAdmin();
+    }
+
+    /**
+     * @description Rule for /users/{userId}/chat_intents/{intentId} documents.
+     * @path /users/{userId}/chat_intents/{intentId}
+     * @deny (get, list, create, update, delete) - Only the backend can read and write chat intent logs.
+     * @principle Restricts all access to the backend.
+     */
+    match /users/{userId}/chat_intents/{intentId} {
+      allow get, list, create, update, delete: if false;
+    }
+
+    /**
+     * @description Rule for /analytics/dailyMetrics/{dateDoc} documents.
+     * @path /analytics/dailyMetrics/{dateDoc}
+     * @deny (get, list, create, update, delete) - Only the backend can read and write daily metrics.
+     * @principle Restricts all access to the backend.
+     */
+    match /analytics/dailyMetrics/{dateDoc} {
+      allow get, list, create, update, delete: if false;
+    }
+
+    /**
+     * @description Rule for /promotions/{promoId} documents.
+     * @path /promotions/{promoId}
+     * @allow (get, list) - Any user can read promotion information.
+     * @deny (create, update, delete) - Only authenticated user can create, update or delete promotion information.
+     * @principle Allows public read access while restricting write access.
+     */
+    match /promotions/{promoId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Rule for /roles_admin/{uid} documents.
+     * @path /roles_admin/{uid}
+     * @allow get: if isAdmin();
+     * @allow list: if false;
+     * @allow create: if isAdmin();
+     * @allow update: if false;
+     * @allow delete: if isAdmin();
+     * @principle DBAC Existence over Content.
+     */
+       match /roles_admin/{uid} {
+        allow get: if isAdmin();
+        allow list: if false;
+        allow create: if isAdmin();
+        allow update: if false;
+        allow delete: if isAdmin();
+    }
+
+    /**
+     * @description Rule for /roles_staff/{uid} documents.
+     * @path /roles_staff/{uid}
+     * @allow get: if isStaff();
+     * @allow list: if false;
+     * @allow create: if isStaff();
+     * @allow update: if false;
+     * @allow delete: if isStaff();
+     * @principle DBAC Existence over Content.
+     */
+      match /roles_staff/{uid} {
+        allow get: if isStaff();
+        allow list: if false;
+        allow create: if isStaff();
+        allow update: if false;
+        allow delete: if isStaff();
+    }
+  }
+}

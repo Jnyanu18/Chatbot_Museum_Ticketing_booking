@@ -1,0 +1,708 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the museum ticketing system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The user's phone number."
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role (visitor, staff, or admin)."
+        },
+        "language": {
+          "type": "string",
+          "description": "The user's preferred language."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the user was created.",
+          "format": "date-time"
+        },
+        "lastSeen": {
+          "type": "string",
+          "description": "Timestamp of when the user was last seen.",
+          "format": "date-time"
+        },
+        "preferences": {
+          "type": "string",
+          "description": "User preferences stored as a JSON string."
+        }
+      },
+      "required": [
+        "id",
+        "displayName",
+        "email",
+        "role",
+        "language",
+        "createdAt",
+        "lastSeen"
+      ]
+    },
+    "Museum": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Museum",
+      "type": "object",
+      "description": "Represents a museum.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the museum entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the museum."
+        },
+        "location": {
+          "type": "string",
+          "description": "Geographic location of the museum. Stored as a JSON string."
+        },
+        "timezones": {
+          "type": "string",
+          "description": "Timezones supported by the museum. Stored as a JSON string."
+        },
+        "openHours": {
+          "type": "string",
+          "description": "Opening hours of the museum. Stored as a JSON string."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the museum's image."
+        },
+        "languagesSupported": {
+          "type": "array",
+          "description": "List of languages supported by the museum.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the museum was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "location",
+        "timezones",
+        "openHours",
+        "imageUrl",
+        "languagesSupported",
+        "createdAt"
+      ]
+    },
+    "Event": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Event",
+      "type": "object",
+      "description": "Represents an event at a museum.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the event entity."
+        },
+        "museumId": {
+          "type": "string",
+          "description": "Reference to Museum. (Relationship: Museum 1:N Event)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the event."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the event.",
+          "format": "date-time"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The start time of the event.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The end time of the event.",
+          "format": "date-time"
+        },
+        "capacity": {
+          "type": "number",
+          "description": "The maximum capacity of the event."
+        },
+        "bookedCount": {
+          "type": "number",
+          "description": "The number of tickets already booked for the event."
+        },
+        "basePrice": {
+          "type": "number",
+          "description": "The base price of a ticket for the event."
+        },
+        "slotMeta": {
+          "type": "string",
+          "description": "Metadata about the event slot. Stored as a JSON string."
+        }
+      },
+      "required": [
+        "id",
+        "museumId",
+        "title",
+        "date",
+        "startTime",
+        "endTime",
+        "capacity",
+        "bookedCount",
+        "basePrice"
+      ]
+    },
+    "Booking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Booking",
+      "type": "object",
+      "description": "Represents a booking made by a user for an event.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the booking entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Booking)"
+        },
+        "eventId": {
+          "type": "string",
+          "description": "Reference to Event. (Relationship: Event 1:N Booking)"
+        },
+        "museumId": {
+          "type": "string",
+          "description": "Reference to Museum. (Relationship: Museum 1:N Booking)"
+        },
+        "slot": {
+          "type": "string",
+          "description": "The time slot booked for the event."
+        },
+        "numTickets": {
+          "type": "number",
+          "description": "The number of tickets booked."
+        },
+        "pricePaid": {
+          "type": "number",
+          "description": "The total price paid for the booking."
+        },
+        "currency": {
+          "type": "string",
+          "description": "The currency used for the payment."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the booking (pending, paid, cancelled, checkedIn)."
+        },
+        "paymentId": {
+          "type": "string",
+          "description": "Reference to Payment. (Relationship: Payment 1:1 Booking)"
+        },
+        "qrId": {
+          "type": "string",
+          "description": "Reference to Ticket. (Relationship: Ticket 1:1 Booking)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the booking was created.",
+          "format": "date-time"
+        },
+        "metadata": {
+          "type": "string",
+          "description": "Additional metadata about the booking. Stored as a JSON string."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "eventId",
+        "museumId",
+        "slot",
+        "numTickets",
+        "pricePaid",
+        "currency",
+        "status",
+        "paymentId",
+        "qrId",
+        "createdAt"
+      ]
+    },
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
+      "type": "object",
+      "description": "Represents a payment made for a booking.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the payment entity."
+        },
+        "bookingId": {
+          "type": "string",
+          "description": "Reference to Booking. (Relationship: Booking 1:1 Payment)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Payment)"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount paid."
+        },
+        "currency": {
+          "type": "string",
+          "description": "The currency used for the payment."
+        },
+        "provider": {
+          "type": "string",
+          "description": "The payment provider (stripe or razorpay)."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the payment."
+        },
+        "receiptUrl": {
+          "type": "string",
+          "description": "URL of the payment receipt."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the payment was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "bookingId",
+        "userId",
+        "amount",
+        "currency",
+        "provider",
+        "status",
+        "createdAt"
+      ]
+    },
+    "Ticket": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Ticket",
+      "type": "object",
+      "description": "Represents a ticket generated for a booking.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ticket entity.  Also the QR code ID (qrId)."
+        },
+        "bookingId": {
+          "type": "string",
+          "description": "Reference to Booking. (Relationship: Booking 1:1 Ticket)"
+        },
+        "qrPayload": {
+          "type": "string",
+          "description": "Signed QR payload (JWT-like)."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the QR code image stored in Storage."
+        },
+        "validFrom": {
+          "type": "string",
+          "description": "Timestamp when the ticket becomes valid.",
+          "format": "date-time"
+        },
+        "validUntil": {
+          "type": "string",
+          "description": "Timestamp when the ticket expires.",
+          "format": "date-time"
+        },
+        "checkedInAt": {
+          "type": "string",
+          "description": "Timestamp when the ticket was checked in.",
+          "format": "date-time"
+        },
+        "scans": {
+          "type": "array",
+          "description": "Array of scan timestamps.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "bookingId",
+        "qrPayload",
+        "imageUrl",
+        "validFrom",
+        "validUntil"
+      ]
+    },
+    "ChatIntent": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatIntent",
+      "type": "object",
+      "description": "Represents a chat intent logged by the chatbot.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the chat intent entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N ChatIntent)"
+        },
+        "sessionId": {
+          "type": "string",
+          "description": "The chat session ID."
+        },
+        "intentName": {
+          "type": "string",
+          "description": "The name of the recognized intent."
+        },
+        "confidence": {
+          "type": "number",
+          "description": "The confidence level of the intent recognition."
+        },
+        "query": {
+          "type": "string",
+          "description": "The user's query."
+        },
+        "response": {
+          "type": "string",
+          "description": "The chatbot's response."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the chat intent was logged.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "sessionId",
+        "intentName",
+        "confidence",
+        "query",
+        "response",
+        "createdAt"
+      ]
+    },
+    "DailyMetrics": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DailyMetrics",
+      "type": "object",
+      "description": "Represents aggregated daily metrics for analytics.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the daily metrics entity.  Represents the date (YYYY-MM-DD)."
+        },
+        "bookings": {
+          "type": "number",
+          "description": "The total number of bookings for the day."
+        },
+        "revenue": {
+          "type": "number",
+          "description": "The total revenue for the day."
+        },
+        "visitors": {
+          "type": "number",
+          "description": "The total number of visitors for the day."
+        },
+        "peakSlots": {
+          "type": "string",
+          "description": "Array of peak visit slots for the day. Stored as a JSON string."
+        },
+        "languageCounts": {
+          "type": "string",
+          "description": "Counts of different languages used by users. Stored as a JSON string."
+        },
+        "chatbotSessions": {
+          "type": "number",
+          "description": "The total number of chatbot sessions for the day."
+        },
+        "conversionRate": {
+          "type": "number",
+          "description": "The booking conversion rate for the day."
+        }
+      },
+      "required": [
+        "id",
+        "bookings",
+        "revenue",
+        "visitors",
+        "peakSlots",
+        "languageCounts",
+        "chatbotSessions",
+        "conversionRate"
+      ]
+    },
+    "Promotion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Promotion",
+      "type": "object",
+      "description": "Represents a promotion or discount.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the promotion entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the promotion."
+        },
+        "museumId": {
+          "type": "string",
+          "description": "Reference to Museum. (Relationship: Museum 1:N Promotion)"
+        },
+        "discountPercent": {
+          "type": "number",
+          "description": "The discount percentage."
+        },
+        "start": {
+          "type": "string",
+          "description": "The start date of the promotion.",
+          "format": "date-time"
+        },
+        "end": {
+          "type": "string",
+          "description": "The end date of the promotion.",
+          "format": "date-time"
+        },
+        "targetAudience": {
+          "type": "string",
+          "description": "The target audience for the promotion."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether the promotion is active."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "museumId",
+        "discountPercent",
+        "start",
+        "end",
+        "targetAudience",
+        "active"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Path-based ownership for private user data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/museums/{museumId}",
+        "definition": {
+          "entityName": "Museum",
+          "schema": {
+            "$ref": "#/backend/entities/Museum"
+          },
+          "description": "Stores museum information.",
+          "params": [
+            {
+              "name": "museumId",
+              "description": "The unique identifier for the museum."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/events/{eventId}",
+        "definition": {
+          "entityName": "Event",
+          "schema": {
+            "$ref": "#/backend/entities/Event"
+          },
+          "description": "Stores event details. Includes denormalized 'museumId' for authorization independence.",
+          "params": [
+            {
+              "name": "eventId",
+              "description": "The unique identifier for the event."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/backend/entities/Booking"
+          },
+          "description": "Stores booking information. Path-based ownership for user bookings.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "bookingId",
+              "description": "The unique identifier for the booking."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": {
+            "$ref": "#/backend/entities/Payment"
+          },
+          "description": "Stores payment information.  Write access restricted to backend; read access to payment owner or admin.",
+          "params": [
+            {
+              "name": "paymentId",
+              "description": "The unique identifier for the payment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/tickets/{qrId}",
+        "definition": {
+          "entityName": "Ticket",
+          "schema": {
+            "$ref": "#/backend/entities/Ticket"
+          },
+          "description": "Stores ticket information. 'qrId' also the ticket ID.  Updates to checkedInAt restricted to staff/admin.",
+          "params": [
+            {
+              "name": "qrId",
+              "description": "The unique identifier for the ticket (QR code ID)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/chat_intents/{intentId}",
+        "definition": {
+          "entityName": "ChatIntent",
+          "schema": {
+            "$ref": "#/backend/entities/ChatIntent"
+          },
+          "description": "Stores chat intent logs. Write access restricted to backend.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "intentId",
+              "description": "The unique identifier for the chat intent."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/analytics/dailyMetrics/{dateDoc}",
+        "definition": {
+          "entityName": "DailyMetrics",
+          "schema": {
+            "$ref": "#/backend/entities/DailyMetrics"
+          },
+          "description": "Stores aggregated daily metrics. Write access restricted to backend.",
+          "params": [
+            {
+              "name": "dateDoc",
+              "description": "The date in YYYY-MM-DD format."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/promotions/{promoId}",
+        "definition": {
+          "entityName": "Promotion",
+          "schema": {
+            "$ref": "#/backend/entities/Promotion"
+          },
+          "description": "Stores promotion details. Includes denormalized 'museumId' for authorization independence.",
+          "params": [
+            {
+              "name": "promoId",
+              "description": "The unique identifier for the promotion."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{uid}",
+        "definition": {
+          "entityName": "role",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Documents in this collection indicate admin role by their existence.  DBAC Existence over Content.",
+          "params": [
+            {
+              "name": "uid",
+              "description": "The unique identifier for the user who is an admin."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_staff/{uid}",
+        "definition": {
+          "entityName": "role",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Documents in this collection indicate staff role by their existence.  DBAC Existence over Content.",
+          "params": [
+            {
+              "name": "uid",
+              "description": "The unique identifier for the user who is staff."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support a museum ticketing system with a multilingual chatbot, seamless booking, QR ticket generation, real-time analytics, and admin controls. The structure prioritizes authorization independence by denormalizing authorization data where necessary, allowing for atomic operations and simplified security rules. Structural segregation ensures collections have homogeneous security postures. Access modeling follows path-based ownership and membership maps for collaborative data.\n\nAuthorization Independence: Achieved through denormalization. For example, the 'museumId' is duplicated in the 'events', 'bookings', and 'promotions' collections to avoid needing to query the 'museums' collection to determine access rights for these entities.\n\nQAPs (Rules are not Filters): Supported by segregating data based on access needs and using membership models. User-owned data (e.g., bookings) is stored under the `/users/{userId}/bookings/{bookingId}` path, making it easy to secure based on user ID. Admin and staff roles are managed via dedicated collections like `/roles_admin/{uid}` and `/roles_staff/{uid}`, enabling existence-based security rules.\n\nSpecific strategies employed include:\n\n*   Storing user-specific data (bookings, chat intents) under the `/users/{userId}` path to simplify ownership-based security rules.\n*   Denormalizing the `museumId` into `events`, `bookings`, and `promotions` to avoid complex `get()` calls in security rules.\n*   Using dedicated collections for admin and staff roles (`/roles_admin/{uid}`, `/roles_staff/{uid}`) to enable simple existence-based role checks.\n*   Storing daily aggregated metrics in `/analytics/dailyMetrics/{dateDoc}` to provide efficient data retrieval for analytics dashboards.\n\nThis structure facilitates secure `list` operations by ensuring that collections contain documents with similar security requirements. For instance, listing events for a specific museum can be done securely under `/museums/{museumId}/events/{eventId}` because all events in that collection are associated with that museum."
+  }
+}
