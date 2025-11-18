@@ -8,21 +8,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { MUSEUMS, EVENTS, USER } from '@/lib/data';
+import { MUSEUMS, EVENTS } from '@/lib/data';
 import { Ticket } from 'lucide-react';
-import { useFirestore } from '@/firebase';
-import { addDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
 export default function NewBookingPage() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
 
   const [selectedMuseum, setSelectedMuseum] = useState('');
   const [selectedEvent, setSelectedEvent] = useState('');
   const [numTickets, setNumTickets] = useState(1);
-  const [userId, setUserId] = useState(USER.id);
-  const firestore = useFirestore();
+  const [userId, setUserId] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setUserId(user.uid);
+    }
+  }, [user]);
 
   useEffect(() => {
     const museumId = searchParams.get('museumId');
@@ -82,6 +88,8 @@ export default function NewBookingPage() {
 
   const filteredEvents = selectedMuseum ? EVENTS.filter(event => event.museumId === selectedMuseum) : [];
 
+  const isButtonDisabled = isUserLoading || !userId || !selectedMuseum || !selectedEvent || numTickets <= 0;
+
   return (
     <div className="space-y-6">
       <div>
@@ -137,7 +145,7 @@ export default function NewBookingPage() {
                   id="userId"
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
-                  placeholder="e.g., user-123"
+                  placeholder={isUserLoading ? "Loading user..." : "e.g., user-123"}
                   disabled
                 />
               </div>
@@ -153,7 +161,7 @@ export default function NewBookingPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button type="submit">
+              <Button type="submit" disabled={isButtonDisabled}>
                 <Ticket className="mr-2 h-4 w-4" />
                 Create Booking
               </Button>
