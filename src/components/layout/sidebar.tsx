@@ -18,6 +18,7 @@ import {
   ScanLine,
   Bot,
   Percent,
+  PlusCircle,
 } from 'lucide-react';
 
 import {
@@ -46,6 +47,7 @@ const commonLinks = [
 ];
 
 const adminLinks = [
+  { href: '/dashboard/new-booking', label: 'New Booking', icon: PlusCircle },
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart },
   { href: '/dashboard/museums', label: 'Museums', icon: Building2 },
   { href: '/dashboard/events', label: 'Events', icon: Calendar },
@@ -119,7 +121,7 @@ export default function DashboardSidebar() {
                         </CollapsibleContent>
                     </Collapsible>
 
-                    {adminLinks.slice(1).map(link => (
+                    {adminLinks.map(link => (
                         <SidebarMenuItem key={link.href}>
                             <SidebarMenuButton
                                 asChild
