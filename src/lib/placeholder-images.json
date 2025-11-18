@@ -1,3 +1,58 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero",
+      "description": "Hero background image of a grand museum hall",
+      "imageUrl": "https://images.unsplash.com/photo-1736910101872-5b6f1701a80d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtdXNldW0lMjBpbnRlcmlvcnxlbnwwfHx8fDE3NjMzNjkxNjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "museum interior"
+    },
+    {
+      "id": "museum-1",
+      "description": "The Metropolitan Museum of Art exterior",
+      "imageUrl": "https://images.unsplash.com/photo-1603750003385-3342231a1ff1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxhcnQlMjBtdXNldW18ZW58MHx8fHwxNzYzMzkwODA3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "art museum"
+    },
+    {
+      "id": "museum-2",
+      "description": "Louvre Museum pyramid",
+      "imageUrl": "https://images.unsplash.com/photo-1461695008884-244cb4543d74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bW9kZXJuJTIwYXJjaGl0ZWN0dXJlfGVufDB8fHx8MTc2MzM4MjY5MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern architecture"
+    },
+    {
+      "id": "museum-3",
+      "description": "British Museum interior",
+      "imageUrl": "https://images.unsplash.com/photo-1730329001367-dce211f39547?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxoaXN0b3JpYyUyMGJ1aWxkaW5nfGVufDB8fHx8MTc2MzQwNDc2Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "historic building"
+    },
+    {
+      "id": "museum-4",
+      "description": "Prado Museum exterior facade",
+      "imageUrl": "https://images.unsplash.com/photo-1665322049384-e56e9ce06e68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjbGFzc2ljYWwlMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzYzNDM4OTk4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "classical architecture"
+    },
+    {
+      "id": "museum-5",
+      "description": "Rijksmuseum in Amsterdam",
+      "imageUrl": "https://images.unsplash.com/photo-1665325598734-fd7ea739dcb2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkdXRjaCUyMG11c2V1bXxlbnwwfHx8fDE3NjM0Mzg5OTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dutch museum"
+    },
+    {
+      "id": "event-1",
+      "description": "Ancient Egypt exhibition poster",
+      "imageUrl": "https://images.unsplash.com/photo-1678460425439-425a40180788?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxlZ3lwdGlhbiUyMGFydHxlbnwwfHx8fDE3NjM0Mzg5OTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "egyptian art"
+    },
+    {
+      "id": "event-2",
+      "description": "Renaissance art gallery",
+      "imageUrl": "https://images.unsplash.com/photo-1599894019794-50339c9ad89c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxyZW5haXNzYW5jZSUyMHBhaW50aW5nfGVufDB8fHx8MTc2MzQzODk5OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "renaissance painting"
+    },
+    {
+      "id": "event-3",
+      "description": "Modern art installation",
+      "imageUrl": "https://images.unsplash.com/photo-1533208087231-c3618eab623c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtb2Rlcm4lMjBhcnR8ZW58MHx8fHwxNzYzNDM4OTk4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern art"
+    }
+  ]
 }
