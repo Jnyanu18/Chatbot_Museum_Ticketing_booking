@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MUSEUMS, EVENTS } from '@/lib/data';
 import { Ticket } from 'lucide-react';
+import { useFirestore } from '@/firebase';
+import { addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function NewBookingPage() {
   const { toast } = useToast();
@@ -16,6 +19,7 @@ export default function NewBookingPage() {
   const [selectedEvent, setSelectedEvent] = useState('');
   const [numTickets, setNumTickets] = useState(1);
   const [userId, setUserId] = useState('');
+  const firestore = useFirestore();
 
   const handleCreateBooking = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,13 +32,28 @@ export default function NewBookingPage() {
       return;
     }
     
-    // In a real app, you would call a server action here to create the booking in your database.
-    console.log({
-      museumId: selectedMuseum,
+    const event = EVENTS.find(e => e.id === selectedEvent);
+    if (!event || !firestore) return;
+
+    const bookingData = {
+      userId: userId,
       eventId: selectedEvent,
-      userId,
-      numTickets,
-    });
+      museumId: selectedMuseum,
+      numTickets: numTickets,
+      pricePaid: event.basePrice * numTickets,
+      currency: 'USD',
+      status: 'paid',
+      createdAt: new Date(),
+      eventTitle: event.title,
+      museumName: MUSEUMS.find(m => m.id === selectedMuseum)?.name,
+      eventDate: event.date,
+      slot: `${event.startTime}-${event.endTime}`, // Added slot
+      paymentId: `manual-${Date.now()}`, // Placeholder
+      qrId: `qr-${Date.now()}`, // Placeholder
+    };
+    
+    const bookingsCol = collection(firestore, 'users', userId, 'bookings');
+    addDocumentNonBlocking(bookingsCol, bookingData);
     
     toast({
       title: 'Booking Created!',
