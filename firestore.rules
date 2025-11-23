@@ -11,6 +11,7 @@
  * Data Structure:
  *  - User profiles: `/users/{userId}`
  *  - Bookings (user-specific): `/users/{userId}/bookings/{bookingId}`
+ *  - Chats (user-specific): `/users/{userId}/chats/{chatId}`
  *  - Chat intents (user-specific): `/users/{userId}/chat_intents/{intentId}`
  *  - Museums: `/museums/{museumId}`
  *  - Events: `/events/{eventId}`
@@ -134,6 +135,20 @@ service cloud.firestore {
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(userId);
+    }
+    
+    /**
+     * @description Rule for /users/{userId}/chats/{chatId} documents.
+     * @path /users/{userId}/chats/{chatId}
+     * @allow (get, list) - Authenticated user with matching userId can read their chats.
+     * @allow (create) - Authenticated user with matching userId can create their chats.
+     * @deny (update, delete) - Chat history is immutable.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
+     */
+    match /users/{userId}/chats/{chatId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if false;
     }
 
     /**
