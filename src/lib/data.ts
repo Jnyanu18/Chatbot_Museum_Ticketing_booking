@@ -55,6 +55,33 @@ export const MUSEUMS: Museum[] = [
     imageUrl: 'https://picsum.photos/seed/museum-5/600/400',
     imageHint: 'dutch museum',
   },
+  {
+    id: 'museum-6',
+    name: 'National Museum, New Delhi',
+    description: 'One of the largest museums in India. Holds a variety of articles ranging from pre-historic era to modern works of art.',
+    location: { address: 'Janpath, Rajpath Area', city: 'New Delhi', country: 'India' },
+    openHours: [{ day: 'Tue-Sun', open: '10:00', close: '18:00' }],
+    imageUrl: 'https://picsum.photos/seed/museum-6/600/400',
+    imageHint: 'Indian museum',
+  },
+  {
+    id: 'museum-7',
+    name: 'Chhatrapati Shivaji Maharaj Vastu Sangrahalaya',
+    description: 'Formerly known as the Prince of Wales Museum of Western India, it is a premier art and history museum in Mumbai.',
+    location: { address: '159-161, Mahatma Gandhi Road, Fort', city: 'Mumbai', country: 'India' },
+    openHours: [{ day: 'Mon-Sun', open: '10:15', close: '18:00' }],
+    imageUrl: 'https://picsum.photos/seed/museum-7/600/400',
+    imageHint: 'Mumbai museum',
+  },
+  {
+    id: 'museum-8',
+    name: 'Indian Museum, Kolkata',
+    description: 'The Indian Museum is the ninth oldest museum in the world and the largest museum in India. It has rare collections of antiques, armour and ornaments, fossils, skeletons, mummies and Mughal paintings.',
+    location: { address: '27, Jawaharlal Nehru Rd, Park Street area', city: 'Kolkata', country: 'India' },
+    openHours: [{ day: 'Tue-Sun', open: '10:00', close: '18:00' }],
+    imageUrl: 'https://picsum.photos/seed/museum-8/600/400',
+    imageHint: 'Kolkata museum',
+  },
 ];
 
 export const EVENTS: Event[] = [
@@ -99,6 +126,34 @@ export const EVENTS: Event[] = [
     basePrice: 22,
     imageUrl: 'https://picsum.photos/seed/event-3/400/200',
     imageHint: 'modern art',
+  },
+  {
+    id: 'event-4',
+    museumId: 'museum-6',
+    title: 'Harappan Civilization Gallery',
+    description: 'See the famous Dancing Girl and other artifacts from the Indus Valley Civilization.',
+    date: '2024-09-10',
+    startTime: '10:00',
+    endTime: '18:00',
+    capacity: 100,
+    bookedCount: 40,
+    basePrice: 10,
+    imageUrl: 'https://picsum.photos/seed/event-4/400/200',
+    imageHint: 'ancient artifacts',
+  },
+  {
+    id: 'event-5',
+    museumId: 'museum-8',
+    title: 'Bharhut Gallery',
+    description: 'Explore the railings and gateway of the Bharhut Stupa, which are among the earliest examples of Indian and Buddhist art.',
+    date: '2024-09-20',
+    startTime: '10:00',
+    endTime: '18:00',
+    capacity: 150,
+    bookedCount: 60,
+    basePrice: 8,
+    imageUrl: 'https://picsum.photos/seed/event-5/400/200',
+    imageHint: 'buddhist art',
   },
 ];
 
@@ -167,6 +222,7 @@ export const revenueByMuseumData = [
     { name: "British Museum", revenue: 29000 },
     { name: "Prado", revenue: 22000 },
     { name: "Rijksmuseum", revenue: 18000 },
+    { name: "National Museum", revenue: 15000 },
 ];
 
 export const peakHoursData = [

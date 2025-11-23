@@ -37,6 +37,24 @@
       "imageHint": "dutch museum"
     },
     {
+      "id": "museum-6",
+      "description": "National Museum in New Delhi",
+      "imageUrl": "https://images.unsplash.com/photo-1589757652792-8fd504437299?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxJbmRpYW4lMjBtdXNldW18ZW58MHx8fHwxNzYzNDk3MzM4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "Indian museum"
+    },
+    {
+      "id": "museum-7",
+      "description": "Chhatrapati Shivaji Maharaj Vastu Sangrahalaya in Mumbai",
+      "imageUrl": "https://images.unsplash.com/photo-1621591249733-8951a88b030d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxNdW1iYWklMjBtdXNldW18ZW58MHx8fHwxNzYzNDk3MzY0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "Mumbai museum"
+    },
+    {
+      "id": "museum-8",
+      "description": "Indian Museum in Kolkata",
+      "imageUrl": "https://images.unsplash.com/photo-1610413233831-29471b402518?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxLb2xrYXRhJTIwbXVzZXVtfGVufDB8fHx8MTc2MzQ5NzM4N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "Kolkata museum"
+    },
+    {
       "id": "event-1",
       "description": "Ancient Egypt exhibition poster",
       "imageUrl": "https://images.unsplash.com/photo-1678460425439-425a40180788?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxlZ3lwdGlhbiUyMGFydHxlbnwwfHx8fDE3NjM0Mzg5OTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
@@ -53,6 +71,18 @@
       "description": "Modern art installation",
       "imageUrl": "https://images.unsplash.com/photo-1533208087231-c3618eab623c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtb2Rlcm4lMjBhcnR8ZW58MHx8fHwxNzYzNDM4OTk4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "modern art"
+    },
+    {
+      "id": "event-4",
+      "description": "Artifacts from an ancient civilization",
+      "imageUrl": "https://images.unsplash.com/photo-1535970793482-10f8b1364b66?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhbmNpZW50JTIwYXJ0aWZhY3RzfGVufDB8fHx8MTc2MzQ5NzQyN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ancient artifacts"
+    },
+    {
+      "id": "event-5",
+      "description": "Buddhist art sculpture",
+      "imageUrl": "https://images.unsplash.com/photo-1589901416739-78331e847754?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxidWRkaGlzdCUyMGFydHxlbnwwfHx8fDE3NjM0OTc0NDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "buddhist art"
     }
   ]
 }
