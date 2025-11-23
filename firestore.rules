@@ -160,7 +160,9 @@ service cloud.firestore {
      */
     match /payments/{paymentId} {
       allow get: if isSignedIn() && request.auth.uid == resource.data.userId;
-      allow list, create, update, delete: if false;
+      // Allow create for simulation purposes. In production, this should be false and handled by a backend.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow list, update, delete: if false;
     }
 
     /**

@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MUSEUMS, EVENTS } from '@/lib/data';
-import { Download, Ticket, X } from 'lucide-react';
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { Download, Ticket, X, Loader2, CreditCard } from 'lucide-react';
+import { useFirestore, useUser, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -36,8 +36,11 @@ export default function NewBookingPage() {
   const [selectedEvent, setSelectedEvent] = useState('');
   const [numTickets, setNumTickets] = useState(1);
   const [userId, setUserId] = useState('');
-  const [lastBooking, setLastBooking] = useState<Booking | null>(null);
+  
+  const [pendingBooking, setPendingBooking] = useState<Booking | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  
   const ticketRef = useRef<HTMLDivElement>(null);
 
 
@@ -81,33 +84,25 @@ export default function NewBookingPage() {
       numTickets: numTickets,
       pricePaid: event.basePrice * numTickets,
       currency: 'USD',
-      status: 'paid',
+      status: 'pending', // Start as pending
       createdAt: new Date(),
       eventTitle: event.title,
       museumName: MUSEUMS.find(m => m.id === selectedMuseum)?.name || 'N/A',
       eventDate: event.date,
       slot: `${event.startTime}-${event.endTime}`, 
-      paymentId: `manual-${Date.now()}`,
+      paymentId: `payment-${Date.now()}`,
       qrId: `qr-${Date.now()}`,
     };
     
-    const bookingsCol = collection(firestore, 'users', userId, 'bookings');
+    const bookingDocRef = doc(firestore, 'users', userId, 'bookings', newBookingId);
     
     try {
-        await addDocumentNonBlocking(bookingsCol, bookingData);
-        
+        setDocumentNonBlocking(bookingDocRef, bookingData, { merge: false });
+        setPendingBooking(bookingData);
         toast({
-          title: 'Booking Created!',
-          description: `Successfully created booking.`,
+          title: 'Booking Pending',
+          description: `Your booking is ready for payment.`,
         });
-        
-        setLastBooking(bookingData);
-        setIsConfirmationOpen(true);
-
-        // Reset form
-        setSelectedMuseum('');
-        setSelectedEvent('');
-        setNumTickets(1);
     } catch(error) {
          toast({
             variant: 'destructive',
@@ -117,8 +112,58 @@ export default function NewBookingPage() {
     }
   };
 
+  const handleSimulatePayment = async () => {
+    if (!pendingBooking || !firestore || !user) return;
+    
+    setIsProcessingPayment(true);
+    
+    // Simulate a delay for payment processing
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const updatedBookingData: Booking = { ...pendingBooking, status: 'paid' };
+    const bookingDocRef = doc(firestore, 'users', user.uid, 'bookings', pendingBooking.id);
+
+    const paymentData = {
+        id: pendingBooking.paymentId,
+        bookingId: pendingBooking.id,
+        userId: pendingBooking.userId,
+        amount: pendingBooking.pricePaid,
+        currency: pendingBooking.currency,
+        provider: 'stripe', // Simulated provider
+        status: 'succeeded',
+        createdAt: new Date().toISOString(),
+    };
+    const paymentDocRef = doc(firestore, 'payments', pendingBooking.paymentId!);
+
+    try {
+        // Update booking to 'paid'
+        setDocumentNonBlocking(bookingDocRef, updatedBookingData, { merge: true });
+
+        // Create payment document
+        setDocumentNonBlocking(paymentDocRef, paymentData, { merge: false });
+
+        toast({
+            title: 'Payment Successful!',
+            description: 'Your booking is confirmed.',
+        });
+
+        setPendingBooking(null); // Clear pending booking
+        setIsConfirmationOpen(true); // Show ticket confirmation
+
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Payment Failed',
+            description: 'Could not process payment. Please try again.',
+        });
+    } finally {
+        setIsProcessingPayment(false);
+    }
+};
+
+
   const handleDownloadPdf = async () => {
-    if (!ticketRef.current || !lastBooking) return;
+    if (!ticketRef.current || !pendingBooking) return;
 
     const canvas = await html2canvas(ticketRef.current, { scale: 2 });
     const imgData = canvas.toDataURL('image/png');
@@ -130,12 +175,16 @@ export default function NewBookingPage() {
     });
 
     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-    pdf.save(`ticket-${lastBooking.id}.pdf`);
+    pdf.save(`ticket-${pendingBooking.id}.pdf`);
   };
 
   const filteredEvents = selectedMuseum ? EVENTS.filter(event => event.museumId === selectedMuseum) : [];
 
   const isButtonDisabled = isUserLoading || !userId || !selectedMuseum || !selectedEvent || numTickets <= 0;
+  
+  const eventDetails = EVENTS.find(e => e.id === selectedEvent);
+  const totalPrice = eventDetails ? (eventDetails.basePrice * numTickets).toFixed(2) : '0.00';
+
 
   return (
     <>
@@ -144,79 +193,111 @@ export default function NewBookingPage() {
           <h1 className="text-3xl font-bold font-headline">New Manual Booking</h1>
           <p className="text-muted-foreground">Create a new ticket booking for a user.</p>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Booking Details</CardTitle>
-            <CardDescription>Fill in the form to create a new booking.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreateBooking} className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="museum">Museum</Label>
-                  <Select value={selectedMuseum} onValueChange={setSelectedMuseum}>
-                    <SelectTrigger id="museum">
-                      <SelectValue placeholder="Select a museum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MUSEUMS.map(museum => (
-                        <SelectItem key={museum.id} value={museum.id}>
-                          {museum.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="event">Event</Label>
-                  <Select value={selectedEvent} onValueChange={setSelectedEvent} disabled={!selectedMuseum}>
-                    <SelectTrigger id="event">
-                      <SelectValue placeholder="Select an event" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredEvents.map(event => (
-                        <SelectItem key={event.id} value={event.id}>
-                          {event.title}
-                        </SelectItem>
-                      ))}
-                      {selectedMuseum && filteredEvents.length === 0 && (
-                        <div className="p-4 text-sm text-center text-muted-foreground">No events for this museum.</div>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="userId">User ID</Label>
-                  <Input
-                    id="userId"
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                    placeholder={isUserLoading ? "Loading user..." : "e.g., user-123"}
-                    disabled
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="numTickets">Number of Tickets</Label>
-                  <Input
-                    id="numTickets"
-                    type="number"
-                    min="1"
-                    value={numTickets}
-                    onChange={(e) => setNumTickets(parseInt(e.target.value, 10))}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isButtonDisabled}>
-                  <Ticket className="mr-2 h-4 w-4" />
-                  Create Booking
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        
+        {pendingBooking ? (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Complete Your Booking</CardTitle>
+                    <CardDescription>Finalize payment for your tickets.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="rounded-lg border bg-card-foreground/5 p-4 text-sm">
+                        <div className="flex justify-between"><span>Event:</span> <span className="font-medium">{pendingBooking.eventTitle}</span></div>
+                        <div className="flex justify-between"><span>Museum:</span> <span className="font-medium">{pendingBooking.museumName}</span></div>
+                        <div className="flex justify-between"><span>Tickets:</span> <span className="font-medium">{pendingBooking.numTickets}</span></div>
+                        <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t"><span>Total:</span> <span>${pendingBooking.pricePaid.toFixed(2)}</span></div>
+                    </div>
+                     <Button onClick={handleSimulatePayment} className="w-full" disabled={isProcessingPayment}>
+                        {isProcessingPayment ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <CreditCard className="mr-2 h-4 w-4" />
+                        )}
+                        {isProcessingPayment ? 'Processing...' : `Simulate Payment of $${totalPrice}`}
+                    </Button>
+                     <Button variant="outline" className="w-full" onClick={() => setPendingBooking(null)}>Cancel</Button>
+                </CardContent>
+            </Card>
+        ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Booking Details</CardTitle>
+                <CardDescription>Fill in the form to create a new booking.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreateBooking} className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="museum">Museum</Label>
+                      <Select value={selectedMuseum} onValueChange={setSelectedMuseum}>
+                        <SelectTrigger id="museum">
+                          <SelectValue placeholder="Select a museum" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MUSEUMS.map(museum => (
+                            <SelectItem key={museum.id} value={museum.id}>
+                              {museum.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="event">Event</Label>
+                      <Select value={selectedEvent} onValueChange={setSelectedEvent} disabled={!selectedMuseum}>
+                        <SelectTrigger id="event">
+                          <SelectValue placeholder="Select an event" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {filteredEvents.map(event => (
+                            <SelectItem key={event.id} value={event.id}>
+                              {event.title}
+                            </SelectItem>
+                          ))}
+                          {selectedMuseum && filteredEvents.length === 0 && (
+                            <div className="p-4 text-sm text-center text-muted-foreground">No events for this museum.</div>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="userId">User ID</Label>
+                      <Input
+                        id="userId"
+                        value={userId}
+                        onChange={(e) => setUserId(e.target.value)}
+                        placeholder={isUserLoading ? "Loading user..." : "e.g., user-123"}
+                        disabled
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="numTickets">Number of Tickets</Label>
+                      <Input
+                        id="numTickets"
+                        type="number"
+                        min="1"
+                        value={numTickets}
+                        onChange={(e) => setNumTickets(parseInt(e.target.value, 10))}
+                      />
+                    </div>
+                  </div>
+                   {eventDetails && (
+                        <div className="text-right font-bold text-lg">
+                            Total: ${totalPrice}
+                        </div>
+                    )}
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={isButtonDisabled}>
+                      <Ticket className="mr-2 h-4 w-4" />
+                      Create Booking
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+        )}
       </div>
 
       <AlertDialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
@@ -226,10 +307,10 @@ export default function NewBookingPage() {
             <AlertDialogDescription>Your ticket has been created.</AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4 flex justify-center">
-            {lastBooking && (
+            {pendingBooking && (
               <div className="w-[350px] scale-75 transform origin-top">
                 <div ref={ticketRef}>
-                  <TicketPDF booking={lastBooking} />
+                  <TicketPDF booking={pendingBooking} />
                 </div>
               </div>
             )}
