@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ import { MoreHorizontal, QrCode, Receipt, Ticket, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-const statusStyles = {
+const statusStyles: { [key: string]: string } = {
   paid: 'bg-blue-100 text-blue-800 border-blue-300',
   checkedIn: 'bg-green-100 text-green-800 border-green-300',
   cancelled: 'bg-red-100 text-red-800 border-red-300',
@@ -43,9 +43,9 @@ export default function MyBookingsPage() {
   const firestore = useFirestore();
 
   const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'bookings');
-  }, [firestore, user]);
+    if (!firestore || !user?.uid) return null;
+    return query(collection(firestore, 'users', user.uid, 'bookings'), orderBy('createdAt', 'desc'));
+  }, [firestore, user?.uid]);
 
   const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MUSEUMS, EVENTS } from '@/lib/data';
 import { Download, Ticket, X, Loader2, CreditCard } from 'lucide-react';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -29,6 +29,7 @@ import {
 export default function NewBookingPage() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
@@ -44,12 +45,18 @@ export default function NewBookingPage() {
   
   const ticketRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
-    if (user) {
-      setUserId(user.uid);
+    // If auth is still loading, do nothing.
+    if (isUserLoading) return;
+    // If the user is not logged in, redirect to the login page.
+    if (!user) {
+      router.push('/login');
+      return;
     }
-  }, [user]);
+    // Set the user ID once the user is loaded.
+    setUserId(user.uid);
+  }, [user, isUserLoading, router]);
+
 
   useEffect(() => {
     const museumId = searchParams.get('museumId');
@@ -182,7 +189,9 @@ export default function NewBookingPage() {
   
   const handleCloseConfirmation = () => {
     setIsConfirmationOpen(false);
-    setConfirmedBooking(null);
+    // Do not clear the confirmed booking here, so it's available for re-download if needed,
+    // but you might want to reset the entire form state. For now, we just close the dialog.
+    // setConfirmedBooking(null); 
   }
 
   const filteredEvents = selectedMuseum ? EVENTS.filter(event => event.museumId === selectedMuseum) : [];
