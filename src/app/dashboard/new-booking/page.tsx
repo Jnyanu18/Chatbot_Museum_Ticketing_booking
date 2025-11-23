@@ -2,14 +2,37 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MUSEUMS, EVENTS } from '@/lib/data';
-import { Download, Ticket, X, Loader2, CreditCard } from 'lucide-react';
+import {
+  Download,
+  Ticket,
+  X,
+  Loader2,
+  CreditCard,
+  Building2,
+  Calendar,
+  Users,
+  AlertCircle,
+} from 'lucide-react';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
@@ -24,7 +47,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function NewBookingPage() {
   const { toast } = useToast();
@@ -37,26 +61,28 @@ export default function NewBookingPage() {
   const [selectedEvent, setSelectedEvent] = useState('');
   const [numTickets, setNumTickets] = useState(1);
   const [userId, setUserId] = useState('');
-  
+
   const [pendingBooking, setPendingBooking] = useState<Booking | null>(null);
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
+  const [isProcessingBooking, setIsProcessingBooking] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  
+
   const ticketRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // If auth is still loading, do nothing.
     if (isUserLoading) return;
-    // If the user is not logged in, redirect to the login page.
     if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'Please log in to create a booking.',
+      });
       router.push('/login');
       return;
     }
-    // Set the user ID once the user is loaded.
     setUserId(user.uid);
-  }, [user, isUserLoading, router]);
-
+  }, [user, isUserLoading, router, toast]);
 
   useEffect(() => {
     const museumId = searchParams.get('museumId');
@@ -79,9 +105,13 @@ export default function NewBookingPage() {
       });
       return;
     }
-    
-    const event = EVENTS.find(e => e.id === selectedEvent);
-    if (!event || !firestore) return;
+
+    setIsProcessingBooking(true);
+    const event = EVENTS.find((e) => e.id === selectedEvent);
+    if (!event || !firestore) {
+      setIsProcessingBooking(false);
+      return;
+    }
 
     const newBookingId = `booking-${Date.now()}`;
     const bookingData: Booking = {
@@ -92,165 +122,174 @@ export default function NewBookingPage() {
       numTickets: numTickets,
       pricePaid: event.basePrice * numTickets,
       currency: 'USD',
-      status: 'pending', // Start as pending
+      status: 'pending',
       createdAt: new Date(),
       eventTitle: event.title,
-      museumName: MUSEUMS.find(m => m.id === selectedMuseum)?.name || 'N/A',
+      museumName: MUSEUMS.find((m) => m.id === selectedMuseum)?.name || 'N/A',
       eventDate: event.date,
-      slot: `${event.startTime}-${event.endTime}`, 
+      slot: `${event.startTime}-${event.endTime}`,
       paymentId: `payment-${Date.now()}`,
       qrId: `qr-${Date.now()}`,
     };
-    
-    const bookingDocRef = doc(firestore, 'users', userId, 'bookings', newBookingId);
-    
+
+    const bookingDocRef = doc(
+      firestore,
+      'users',
+      userId,
+      'bookings',
+      newBookingId
+    );
+
     try {
-        setDocumentNonBlocking(bookingDocRef, bookingData, { merge: false });
-        setPendingBooking(bookingData);
-        toast({
-          title: 'Booking Pending',
-          description: `Your booking is ready for payment.`,
-        });
-    } catch(error) {
-         toast({
-            variant: 'destructive',
-            title: 'Booking Failed',
-            description: 'Could not create booking. Please try again.',
-        });
+      setDocumentNonBlocking(bookingDocRef, bookingData, { merge: false });
+      setPendingBooking(bookingData);
+      toast({
+        title: 'Booking Pending',
+        description: `Your booking is ready for payment.`,
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Booking Failed',
+        description: 'Could not create booking. Please try again.',
+      });
+    } finally {
+      setIsProcessingBooking(false);
     }
   };
 
   const handleSimulatePayment = async () => {
     if (!pendingBooking || !firestore || !user) return;
-    
     setIsProcessingPayment(true);
-    
-    // Simulate a delay for payment processing
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const updatedBookingData: Booking = { ...pendingBooking, status: 'paid' };
     const bookingDocRef = doc(firestore, 'users', user.uid, 'bookings', pendingBooking.id);
-
+    
     const paymentData = {
-        id: pendingBooking.paymentId,
-        bookingId: pendingBooking.id,
-        userId: pendingBooking.userId,
-        amount: pendingBooking.pricePaid,
-        currency: pendingBooking.currency,
-        provider: 'stripe', // Simulated provider
-        status: 'succeeded',
-        createdAt: new Date().toISOString(),
+      id: pendingBooking.paymentId,
+      bookingId: pendingBooking.id,
+      userId: pendingBooking.userId,
+      amount: pendingBooking.pricePaid,
+      currency: pendingBooking.currency,
+      provider: 'stripe',
+      status: 'succeeded',
+      createdAt: new Date().toISOString(),
     };
     const paymentDocRef = doc(firestore, 'payments', pendingBooking.paymentId!);
 
     try {
-        // Update booking to 'paid'
-        setDocumentNonBlocking(bookingDocRef, updatedBookingData, { merge: true });
-
-        // Create payment document
-        setDocumentNonBlocking(paymentDocRef, paymentData, { merge: false });
-
-        toast({
-            title: 'Payment Successful!',
-            description: 'Your booking is confirmed.',
-        });
-        
-        setConfirmedBooking(updatedBookingData);
-        setPendingBooking(null); // Clear pending booking
-        setIsConfirmationOpen(true); // Show ticket confirmation
-
+      setDocumentNonBlocking(bookingDocRef, updatedBookingData, { merge: true });
+      setDocumentNonBlocking(paymentDocRef, paymentData, { merge: false });
+      toast({
+        title: 'Payment Successful!',
+        description: 'Your booking is confirmed.',
+      });
+      setConfirmedBooking(updatedBookingData);
+      setPendingBooking(null);
+      setIsConfirmationOpen(true);
     } catch (error) {
-        toast({
-            variant: 'destructive',
-            title: 'Payment Failed',
-            description: 'Could not process payment. Please try again.',
-        });
+      toast({
+        variant: 'destructive',
+        title: 'Payment Failed',
+        description: 'Could not process payment. Please try again.',
+      });
     } finally {
-        setIsProcessingPayment(false);
+      setIsProcessingPayment(false);
     }
-};
-
+  };
 
   const handleDownloadPdf = async () => {
     if (!ticketRef.current || !confirmedBooking) return;
-
     const canvas = await html2canvas(ticketRef.current, { scale: 2 });
     const imgData = canvas.toDataURL('image/png');
-    
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'px',
-      format: [canvas.width, canvas.height]
+      format: [canvas.width, canvas.height],
     });
-
     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
     pdf.save(`ticket-${confirmedBooking.id}.pdf`);
   };
-  
+
   const handleCloseConfirmation = () => {
     setIsConfirmationOpen(false);
-    // Do not clear the confirmed booking here, so it's available for re-download if needed,
-    // but you might want to reset the entire form state. For now, we just close the dialog.
-    // setConfirmedBooking(null); 
+    setConfirmedBooking(null);
+    setSelectedMuseum('');
+    setSelectedEvent('');
+    setNumTickets(1);
+  };
+  
+  const handleCancelPayment = () => {
+    if(!pendingBooking || !firestore || !user) return;
+    const bookingDocRef = doc(firestore, 'users', user.uid, 'bookings', pendingBooking.id);
+    // You might want to delete the pending booking from Firestore here
+    setPendingBooking(null);
+    toast({
+        title: 'Booking Cancelled',
+        description: 'Your pending booking has been cancelled.',
+    });
   }
 
-  const filteredEvents = selectedMuseum ? EVENTS.filter(event => event.museumId === selectedMuseum) : [];
-
-  const isButtonDisabled = isUserLoading || !userId || !selectedMuseum || !selectedEvent || numTickets <= 0;
+  const filteredEvents = selectedMuseum ? EVENTS.filter((event) => event.museumId === selectedMuseum) : [];
+  const selectedEventDetails = EVENTS.find((e) => e.id === selectedEvent);
+  const totalPrice = selectedEventDetails ? (selectedEventDetails.basePrice * numTickets) : 0;
   
-  const eventDetails = EVENTS.find(e => e.id === selectedEvent);
-  const totalPrice = eventDetails ? (eventDetails.basePrice * numTickets).toFixed(2) : '0.00';
-
+  const isFormSubmittable = !isUserLoading && userId && selectedMuseum && selectedEvent && numTickets > 0;
 
   return (
     <>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold font-headline">New Manual Booking</h1>
-          <p className="text-muted-foreground">Create a new ticket booking for a user.</p>
+          <p className="text-muted-foreground">
+            Create a new ticket booking for a user.
+          </p>
         </div>
-        
+
         {pendingBooking ? (
-            <Card>
+            <Card className="max-w-md mx-auto">
                 <CardHeader>
                     <CardTitle>Complete Your Booking</CardTitle>
-                    <CardDescription>Finalize payment for your tickets.</CardDescription>
+                    <CardDescription>Review and finalize payment for your tickets.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="rounded-lg border bg-card-foreground/5 p-4 text-sm">
-                        <div className="flex justify-between"><span>Event:</span> <span className="font-medium">{pendingBooking.eventTitle}</span></div>
-                        <div className="flex justify-between"><span>Museum:</span> <span className="font-medium">{pendingBooking.museumName}</span></div>
+                    <div className="rounded-lg border bg-card-foreground/5 p-4 text-sm space-y-2">
+                        <div className="flex justify-between"><span>Event:</span> <span className="font-medium text-right">{pendingBooking.eventTitle}</span></div>
+                        <div className="flex justify-between"><span>Museum:</span> <span className="font-medium text-right">{pendingBooking.museumName}</span></div>
                         <div className="flex justify-between"><span>Tickets:</span> <span className="font-medium">{pendingBooking.numTickets}</span></div>
-                        <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t"><span>Total:</span> <span>${pendingBooking.pricePaid.toFixed(2)}</span></div>
+                        <Separator />
+                        <div className="flex justify-between font-bold text-base"><span>Total Price:</span> <span>${pendingBooking.pricePaid.toFixed(2)}</span></div>
                     </div>
-                     <Button onClick={handleSimulatePayment} className="w-full" disabled={isProcessingPayment}>
-                        {isProcessingPayment ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <CreditCard className="mr-2 h-4 w-4" />
-                        )}
-                        {isProcessingPayment ? 'Processing...' : `Simulate Payment of $${totalPrice}`}
-                    </Button>
-                     <Button variant="outline" className="w-full" onClick={() => setPendingBooking(null)}>Cancel</Button>
                 </CardContent>
+                 <CardFooter className="flex flex-col gap-2">
+                    <Button onClick={handleSimulatePayment} className="w-full" disabled={isProcessingPayment}>
+                        {isProcessingPayment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                        {isProcessingPayment ? 'Processing Payment...' : `Confirm & Pay $${pendingBooking.pricePaid.toFixed(2)}`}
+                    </Button>
+                    <Button variant="ghost" className="w-full" onClick={handleCancelPayment} disabled={isProcessingPayment}>Cancel</Button>
+                 </CardFooter>
             </Card>
         ) : (
-            <Card>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle>Booking Details</CardTitle>
-                <CardDescription>Fill in the form to create a new booking.</CardDescription>
+                <CardDescription>
+                  Fill in the form to create a new booking reservation.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateBooking} className="space-y-6">
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="museum">Museum</Label>
                       <Select value={selectedMuseum} onValueChange={setSelectedMuseum}>
-                        <SelectTrigger id="museum">
+                        <SelectTrigger id="museum" className="w-full">
                           <SelectValue placeholder="Select a museum" />
                         </SelectTrigger>
                         <SelectContent>
-                          {MUSEUMS.map(museum => (
+                          {MUSEUMS.map((museum) => (
                             <SelectItem key={museum.id} value={museum.id}>
                               {museum.name}
                             </SelectItem>
@@ -260,59 +299,98 @@ export default function NewBookingPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="event">Event</Label>
-                      <Select value={selectedEvent} onValueChange={setSelectedEvent} disabled={!selectedMuseum}>
-                        <SelectTrigger id="event">
+                      <Select
+                        value={selectedEvent}
+                        onValueChange={setSelectedEvent}
+                        disabled={!selectedMuseum}
+                      >
+                        <SelectTrigger id="event" className="w-full">
                           <SelectValue placeholder="Select an event" />
                         </SelectTrigger>
                         <SelectContent>
-                          {filteredEvents.map(event => (
+                          {filteredEvents.map((event) => (
                             <SelectItem key={event.id} value={event.id}>
                               {event.title}
                             </SelectItem>
                           ))}
                           {selectedMuseum && filteredEvents.length === 0 && (
-                            <div className="p-4 text-sm text-center text-muted-foreground">No events for this museum.</div>
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              No events for this museum.
+                            </div>
                           )}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="userId">User ID</Label>
-                      <Input
-                        id="userId"
-                        value={userId}
-                        onChange={(e) => setUserId(e.target.value)}
-                        placeholder={isUserLoading ? "Loading user..." : "e.g., user-123"}
-                        disabled
-                      />
-                    </div>
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                     <div className="space-y-2">
                       <Label htmlFor="numTickets">Number of Tickets</Label>
                       <Input
                         id="numTickets"
                         type="number"
                         min="1"
                         value={numTickets}
-                        onChange={(e) => setNumTickets(parseInt(e.target.value, 10))}
+                        onChange={(e) => setNumTickets(Math.max(1, parseInt(e.target.value, 10)))}
+                        className="w-full"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="userId">User ID</Label>
+                      <Input
+                        id="userId"
+                        value={userId}
+                        placeholder={isUserLoading ? 'Loading user...' : 'User ID'}
+                        disabled
+                        readOnly
+                      />
+                       <p className="text-xs text-muted-foreground">This is the ID of the logged-in user.</p>
+                    </div>
                   </div>
-                   {eventDetails && (
-                        <div className="text-right font-bold text-lg">
-                            Total: ${totalPrice}
-                        </div>
-                    )}
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={isButtonDisabled}>
-                      <Ticket className="mr-2 h-4 w-4" />
-                      Create Booking
+                  <CardFooter className="px-0">
+                    <Button type="submit" disabled={!isFormSubmittable || isProcessingBooking}>
+                       {isProcessingBooking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Ticket className="mr-2 h-4 w-4" />}
+                       {isProcessingBooking ? "Creating..." : "Proceed to Payment"}
                     </Button>
-                  </div>
+                  </CardFooter>
                 </form>
               </CardContent>
             </Card>
+
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Booking Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Museum</span>
+                            <span className="font-medium text-right">{MUSEUMS.find(m => m.id === selectedMuseum)?.name || '-'}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Event</span>
+                            <span className="font-medium text-right">{selectedEventDetails?.title || '-'}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Tickets</span>
+                            <span className="font-medium">{numTickets > 0 ? numTickets : '-'}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex items-center justify-between text-lg font-bold">
+                            <span>Total Price</span>
+                            <span>${totalPrice.toFixed(2)}</span>
+                        </div>
+                    </CardContent>
+                </Card>
+                
+                 {!isFormSubmittable && (
+                     <Alert>
+                        <AlertCircle className="h-4 w-4"/>
+                        <AlertTitle>Incomplete Form</AlertTitle>
+                        <AlertDescription>Please select a museum, event, and number of tickets to proceed.</AlertDescription>
+                    </Alert>
+                )}
+            </div>
+          </div>
         )}
       </div>
 
@@ -320,11 +398,13 @@ export default function NewBookingPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Booking Successful!</AlertDialogTitle>
-            <AlertDialogDescription>Your ticket has been created.</AlertDialogDescription>
+            <AlertDialogDescription>
+              Your ticket has been generated. You can download it now.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4 flex justify-center">
             {confirmedBooking && (
-              <div className="w-[350px] scale-75 transform origin-top">
+              <div className="w-[350px] origin-top scale-75 transform">
                 <div ref={ticketRef}>
                   <TicketPDF booking={confirmedBooking} />
                 </div>
@@ -332,7 +412,7 @@ export default function NewBookingPage() {
             )}
           </div>
           <AlertDialogFooter className="sm:justify-between">
-             <Button variant="outline" onClick={handleCloseConfirmation}>
+            <Button variant="outline" onClick={handleCloseConfirmation}>
               <X className="mr-2 h-4 w-4" /> Close
             </Button>
             <Button onClick={handleDownloadPdf}>
