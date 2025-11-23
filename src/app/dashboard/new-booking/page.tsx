@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MUSEUMS, EVENTS } from '@/lib/data';
 import { Download, Ticket, X, Loader2, CreditCard } from 'lucide-react';
-import { useFirestore, useUser, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import jsPDF from 'jspdf';
@@ -38,6 +38,7 @@ export default function NewBookingPage() {
   const [userId, setUserId] = useState('');
   
   const [pendingBooking, setPendingBooking] = useState<Booking | null>(null);
+  const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   
@@ -146,7 +147,8 @@ export default function NewBookingPage() {
             title: 'Payment Successful!',
             description: 'Your booking is confirmed.',
         });
-
+        
+        setConfirmedBooking(updatedBookingData);
         setPendingBooking(null); // Clear pending booking
         setIsConfirmationOpen(true); // Show ticket confirmation
 
@@ -163,7 +165,7 @@ export default function NewBookingPage() {
 
 
   const handleDownloadPdf = async () => {
-    if (!ticketRef.current || !pendingBooking) return;
+    if (!ticketRef.current || !confirmedBooking) return;
 
     const canvas = await html2canvas(ticketRef.current, { scale: 2 });
     const imgData = canvas.toDataURL('image/png');
@@ -175,8 +177,13 @@ export default function NewBookingPage() {
     });
 
     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-    pdf.save(`ticket-${pendingBooking.id}.pdf`);
+    pdf.save(`ticket-${confirmedBooking.id}.pdf`);
   };
+  
+  const handleCloseConfirmation = () => {
+    setIsConfirmationOpen(false);
+    setConfirmedBooking(null);
+  }
 
   const filteredEvents = selectedMuseum ? EVENTS.filter(event => event.museumId === selectedMuseum) : [];
 
@@ -307,16 +314,16 @@ export default function NewBookingPage() {
             <AlertDialogDescription>Your ticket has been created.</AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4 flex justify-center">
-            {pendingBooking && (
+            {confirmedBooking && (
               <div className="w-[350px] scale-75 transform origin-top">
                 <div ref={ticketRef}>
-                  <TicketPDF booking={pendingBooking} />
+                  <TicketPDF booking={confirmedBooking} />
                 </div>
               </div>
             )}
           </div>
           <AlertDialogFooter className="sm:justify-between">
-             <Button variant="outline" onClick={() => setIsConfirmationOpen(false)}>
+             <Button variant="outline" onClick={handleCloseConfirmation}>
               <X className="mr-2 h-4 w-4" /> Close
             </Button>
             <Button onClick={handleDownloadPdf}>
