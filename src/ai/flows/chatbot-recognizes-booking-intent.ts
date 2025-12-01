@@ -1,4 +1,3 @@
-// chatbot-recognizes-booking-intent.ts
 'use server';
 
 /**
@@ -11,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { MUSEUMS } from '@/lib/data';
 
 const ChatbotRecognizesBookingIntentInputSchema = z.object({
   message: z.string().describe('The user message to be processed by the chatbot.'),
@@ -19,14 +19,7 @@ const ChatbotRecognizesBookingIntentInputSchema = z.object({
 export type ChatbotRecognizesBookingIntentInput = z.infer<typeof ChatbotRecognizesBookingIntentInputSchema>;
 
 const ChatbotRecognizesBookingIntentOutputSchema = z.object({
-  intentRecognized: z.boolean().describe('Whether the chatbot recognized a booking intent.'),
-  followUpMessage: z.string().optional().describe('A message to guide the user through the booking process if intent is recognized.'),
-  suggestedMuseums: z.array(
-    z.object({
-      museumId: z.string(),
-      museumName: z.string(),
-    })
-  ).optional().describe('Suggested museums based on user message.'),
+  intentRecognized: z.boolean().describe('Set to true ONLY if the user explicitly mentions wanting to "book", "buy", "get", or "reserve" a ticket. Otherwise, set to false.'),
 });
 export type ChatbotRecognizesBookingIntentOutput = z.infer<typeof ChatbotRecognizesBookingIntentOutputSchema>;
 
@@ -34,35 +27,27 @@ export async function chatbotRecognizesBookingIntent(input: ChatbotRecognizesBoo
   return chatbotRecognizesBookingIntentFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'chatbotRecognizesBookingIntentPrompt',
-  input: {schema: ChatbotRecognizesBookingIntentInputSchema},
-  output: {schema: ChatbotRecognizesBookingIntentOutputSchema},
-  prompt: `You are a helpful chatbot assisting users in booking museum tickets.
-
-  Analyze the user's message and determine if they are expressing an intent to book tickets.
-  If a booking intent is detected, set intentRecognized to true and provide a followUpMessage to guide them through the booking process.
-  The followUpMessage should ask the user which museum they would like to book tickets for and offer a few suggestions based on the content of their message if possible.
-  If no booking intent is detected, set intentRecognized to false and leave followUpMessage blank.
-
-  User Message: {{{message}}}
-  User ID: {{{userId}}}
-  \n  Output format:{
-  intentRecognized: boolean,
-  followUpMessage?: string,
-  suggestedMuseums?: Array<{museumId: string, museumName: string}>
-}`,
-});
-
 const chatbotRecognizesBookingIntentFlow = ai.defineFlow(
   {
     name: 'chatbotRecognizesBookingIntentFlow',
     inputSchema: ChatbotRecognizesBookingIntentInputSchema,
     outputSchema: ChatbotRecognizesBookingIntentOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (input) => {
+    const llmResponse = await ai.generate({
+        prompt: `You are an intent recognition agent for a museum chatbot. Your only job is to determine if the user wants to book a ticket.
+        
+        Analyze the user's message.
+        - If the message contains phrases like "I want to book a ticket", "buy tickets", "get a ticket", "reserve a spot", or similar explicit requests, you MUST set \`intentRecognized\` to true.
+        - If the user is just asking a question (e.g., "What events are there?", "Are you open today?", "Tell me about the Louvre"), you MUST set \`intentRecognized\` to false.
+        
+        User Message: "${'\'\''}${input.message}${'\'\''}"
+        `,
+        output: {
+            schema: ChatbotRecognizesBookingIntentOutputSchema,
+        }
+    });
+
+    return llmResponse.output()!;
   }
 );
-
