@@ -12,6 +12,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import {
   DropdownMenu,
@@ -27,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { MoreHorizontal, QrCode, Receipt, Ticket, Loader2 } from 'lucide-react';
+import { MoreHorizontal, QrCode, Receipt, Ticket, Loader2, Building, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -66,68 +67,116 @@ export default function MyBookingsPage() {
             <p className="ml-2">Loading your bookings...</p>
           </div>
         ) : bookings && bookings.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Museum</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Tickets</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {bookings.map((booking) => (
-                <TableRow key={booking.id}>
-                  <TableCell className="font-medium">
-                    {booking.eventTitle}
-                  </TableCell>
-                  <TableCell>{booking.museumName}</TableCell>
-                  <TableCell>
-                    {new Date(booking.eventDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>{booking.numTickets}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'capitalize',
-                        statusStyles[booking.status]
-                      )}
-                    >
-                      {booking.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    ${booking.pricePaid.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <QrCode className="mr-2 h-4 w-4" />
-                          View Ticket
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Receipt className="mr-2 h-4 w-4" />
-                          View Receipt
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          <>
+          {/* Mobile View */}
+          <div className="space-y-4 md:hidden">
+            {bookings.map((booking) => (
+              <Card key={booking.id} className="w-full">
+                <CardHeader>
+                  <CardTitle className="text-base">{booking.eventTitle}</CardTitle>
+                   <div className="flex items-center text-sm text-muted-foreground pt-1">
+                      <Building className="h-4 w-4 mr-1.5"/>
+                      <span>{booking.museumName}</span>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                   <div className="flex justify-between">
+                     <span className="text-muted-foreground">Date:</span>
+                     <span>{new Date(booking.eventDate).toLocaleDateString()}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-muted-foreground">Tickets:</span>
+                     <span>{booking.numTickets}</span>
+                   </div>
+                   <div className="flex justify-between items-center">
+                     <span className="text-muted-foreground">Status:</span>
+                     <Badge variant="outline" className={cn('capitalize', statusStyles[booking.status])}>{booking.status}</Badge>
+                   </div>
+                   <div className="flex justify-between font-medium">
+                     <span>Total:</span>
+                     <span>${booking.pricePaid.toFixed(2)}</span>
+                   </div>
+                </CardContent>
+                <CardFooter className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm">
+                        <QrCode className="mr-2 h-4 w-4" />
+                        Ticket
+                    </Button>
+                     <Button variant="outline" size="sm">
+                        <Receipt className="mr-2 h-4 w-4" />
+                        Receipt
+                    </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+          
+          {/* Desktop View */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Museum</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Tickets</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {bookings.map((booking) => (
+                  <TableRow key={booking.id}>
+                    <TableCell className="font-medium">
+                      {booking.eventTitle}
+                    </TableCell>
+                    <TableCell>{booking.museumName}</TableCell>
+                    <TableCell>
+                      {new Date(booking.eventDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{booking.numTickets}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'capitalize',
+                          statusStyles[booking.status]
+                        )}
+                      >
+                        {booking.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      ${booking.pricePaid.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <QrCode className="mr-2 h-4 w-4" />
+                            View Ticket
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Receipt className="mr-2 h-4 w-4" />
+                            View Receipt
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          </>
         ) : (
           <div className="flex h-64 flex-col items-center justify-center space-y-4 text-center">
             <Ticket className="h-16 w-16 text-muted-foreground" />
