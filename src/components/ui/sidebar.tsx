@@ -5,6 +5,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
+import { useIsMounted } from "@/hooks/use-is-mounted"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -277,15 +278,10 @@ const SidebarTrigger = React.forwardRef<
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
   const { toggleSidebar } = useSidebar();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  const isMounted = useIsMounted();
   const isMobile = useIsMobile();
 
-  if (!mounted || !isMobile) {
+  if (!isMounted || !isMobile) {
     return null;
   }
   
