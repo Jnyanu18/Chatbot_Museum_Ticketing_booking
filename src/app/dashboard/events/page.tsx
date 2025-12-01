@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -72,14 +72,14 @@ function EventForm({
     e.preventDefault();
     setIsSaving(true);
     
-    // Add image placeholders
+    // Add image placeholders and ensure numeric types
     const eventData = {
       ...formData,
       basePrice: Number(formData.basePrice),
       capacity: Number(formData.capacity),
       imageUrl: event?.imageUrl || `https://picsum.photos/seed/${formData.title.replace(/\s+/g, '-')}/400/200`,
       imageHint: event?.imageHint || 'event photo',
-    }
+    };
 
     try {
       await onSave(eventData);
@@ -101,7 +101,7 @@ function EventForm({
         </div>
         <div className="space-y-2">
             <Label htmlFor="museumId">Museum</Label>
-            <Select onValueChange={handleSelectChange} defaultValue={formData.museumId} required>
+            <Select onValueChange={handleSelectChange} value={formData.museumId} required>
                 <SelectTrigger id="museumId">
                     <SelectValue placeholder="Select a museum" />
                 </SelectTrigger>
@@ -155,6 +155,7 @@ export default function EventsPage() {
   const firestore = useFirestore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const { toast } = useToast();
 
   const eventsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -214,7 +215,6 @@ export default function EventsPage() {
   }
   
   const isLoading = areEventsLoading || areMuseumsLoading;
-  const { toast } = useToast();
 
   return (
      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -325,8 +325,11 @@ export default function EventsPage() {
          <DialogContent className="sm:max-w-[625px]">
             <DialogHeader>
                 <DialogTitle>{selectedEvent ? 'Edit Event' : 'Add New Event'}</DialogTitle>
+                <DialogDescription>
+                    {selectedEvent ? 'Make changes to an existing event.' : 'Fill out the form below to create a new event.'}
+                </DialogDescription>
             </DialogHeader>
-            { (isLoading) ? <p>Loading museum data...</p> : 
+            { (areMuseumsLoading) ? <p>Loading museum data...</p> : 
                 <EventForm 
                     event={selectedEvent} 
                     museums={museums || []} 
@@ -339,3 +342,5 @@ export default function EventsPage() {
     </Dialog>
   );
 }
+
+    
