@@ -1,7 +1,5 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy, addDoc, serverTimestamp, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import type { Event, Museum } from '@/lib/types';
 import {
   Card,
@@ -34,6 +32,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { EVENTS, MUSEUMS } from '@/lib/data';
 
 function EventForm({
   event,
@@ -151,51 +150,39 @@ function EventForm({
 }
 
 export default function EventsPage() {
-  const firestore = useFirestore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { toast } = useToast();
-
-  const eventsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'events'), orderBy('date', 'desc'));
-  }, [firestore]);
-
-  const museumsQuery = useMemo(() => {
-    if(!firestore) return null;
-    return collection(firestore, 'museums');
-  }, [firestore]);
-
-  const { data: events, isLoading: areEventsLoading } = useCollection<Event>(eventsQuery);
-  const { data: museums, isLoading: areMuseumsLoading } = useCollection<Museum>(museumsQuery);
+  
+  const [events, setEvents] = useState<Event[]>(EVENTS);
+  const [museums] = useState<Museum[]>(MUSEUMS);
+  
+  const areEventsLoading = false;
+  const areMuseumsLoading = false;
 
   const getMuseumName = (museumId: string) => {
     return museums?.find((m) => m.id === museumId)?.name || 'Unknown';
   };
 
   const handleSaveEvent = async (eventData: Partial<Event>) => {
-    if (!firestore) throw new Error('Firestore not initialized');
-    
     if (selectedEvent) {
-      const eventRef = doc(firestore, 'events', selectedEvent.id);
-      await updateDoc(eventRef, eventData);
+      setEvents(events.map(e => e.id === selectedEvent.id ? { ...e, ...eventData, id: selectedEvent.id } as Event : e));
     } else {
-      const newEventData = {
+      const newEvent = {
         ...eventData,
+        id: `event-${Date.now()}`,
         bookedCount: 0,
-        createdAt: serverTimestamp()
-      }
-      await addDoc(collection(firestore, 'events'), newEventData);
+        createdAt: new Date(),
+      } as Event;
+      setEvents([newEvent, ...events]);
     }
   };
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (!firestore) throw new Error('Firestore not initialized');
     if(window.confirm('Are you sure you want to delete this event?')) {
         try {
-            const eventRef = doc(firestore, 'events', eventId);
-            await deleteDoc(eventRef);
-             toast({ title: 'Event Deleted', description: 'The event has been successfully deleted.' });
+            setEvents(events.filter(e => e.id !== eventId));
+            toast({ title: 'Event Deleted', description: 'The event has been successfully deleted.' });
         } catch(error) {
             console.error("Error deleting event:", error);
             toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the event.' });

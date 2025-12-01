@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy, addDoc, serverTimestamp, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { useState } from 'react';
 import type { Museum } from '@/lib/types';
 import {
   Card,
@@ -33,6 +31,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { MUSEUMS } from '@/lib/data';
 
 function MuseumForm({
   museum,
@@ -118,37 +117,30 @@ function MuseumForm({
 
 
 export default function MuseumsPage() {
-  const firestore = useFirestore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedMuseum, setSelectedMuseum] = useState<Museum | null>(null);
   const { toast } = useToast();
 
-  const museumsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'museums'), orderBy('name'));
-  }, [firestore]);
-
-  const { data: museums, isLoading } = useCollection<Museum>(museumsQuery);
+  const [museums, setMuseums] = useState<Museum[]>(MUSEUMS);
+  const isLoading = false;
 
   const handleSaveMuseum = async (museumData: Partial<Museum>) => {
-    if (!firestore) throw new Error("Firestore not available");
-    
     if(selectedMuseum) {
-        const museumRef = doc(firestore, 'museums', selectedMuseum.id);
-        await updateDoc(museumRef, museumData);
+        setMuseums(museums.map(m => m.id === selectedMuseum.id ? { ...m, ...museumData, id: m.id } as Museum : m));
     } else {
-        await addDoc(collection(firestore, 'museums'), {
+        const newMuseum = {
             ...museumData,
-            createdAt: serverTimestamp(),
-        });
+            id: `museum-${Date.now()}`,
+            createdAt: new Date(),
+        } as Museum;
+        setMuseums([newMuseum, ...museums]);
     }
   }
 
   const handleDeleteMuseum = async (museumId: string) => {
-    if (!firestore) return;
     if (window.confirm("Are you sure you want to delete this museum? This action cannot be undone.")) {
         try {
-            await deleteDoc(doc(firestore, "museums", museumId));
+            setMuseums(museums.filter(m => m.id !== museumId));
             toast({ title: "Museum Deleted", description: "The museum has been successfully deleted." });
         } catch (error) {
             console.error("Error deleting museum: ", error);
