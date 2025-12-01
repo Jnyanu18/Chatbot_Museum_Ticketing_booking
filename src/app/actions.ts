@@ -1,3 +1,4 @@
+
 'use server';
 
 import { chatbotFAQAssistance } from '@/ai/flows/chatbot-faq-assistance';
@@ -40,25 +41,18 @@ export async function getChatbotResponse(history: ChatMessage[], newUserMessage:
             userId: userId,
             message: newUserMessage,
         });
+        
+        const bookingInProgress = history.some(m => m.role === 'bot' && m.content.includes('Just to confirm, you want to book'));
 
-        // The booking flow is now smart enough to know if a booking is in progress
-        // by looking at the history.
-        if (intentRecognition.intentRecognized) {
-            // Step 2a: If booking intent is recognized, use the booking flow
+        // If booking intent is recognized OR a booking is already in progress
+        if (intentRecognition.intentRecognized || bookingInProgress) {
+            // Step 2a: Use the booking flow
             const bookingResponse = await chatbotBookTicket({
                 userId: userId,
                 history: currentHistory, // Pass the full history
             });
 
-            if (bookingResponse.isBookingComplete) {
-                botResponse = bookingResponse.followUpMessage;
-            } else if (bookingResponse.requiresFollowUp) {
-                botResponse = bookingResponse.followUpMessage;
-            } else {
-                 // If booking doesn't need a follow-up, it might be a general question within the booking context.
-                 const faqResponse = await chatbotFAQAssistance({ query: newUserMessage });
-                 if (faqResponse.answer) botResponse = faqResponse.answer;
-            }
+            botResponse = bookingResponse.followUpMessage;
         } else {
             // Step 2b: If no booking intent, handle as a general FAQ
             const faqResponse = await chatbotFAQAssistance({

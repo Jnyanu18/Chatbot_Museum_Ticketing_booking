@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow that handles the entire ticket booking conversation via chatbot.
@@ -114,7 +115,7 @@ const chatbotBookTicketFlow = ai.defineFlow(
       4. Once you have all the required information (museumId, eventId, numTickets), you MUST confirm with the user before calling the booking tool. For example: "Just to confirm, you want to book [numTickets] tickets for [Event Name] at [Museum Name]. Is that correct?"
       5. If the user confirms, and only then, call the \`createBooking\` tool with the collected details.
       6. After the tool call, use its output message as your final response. If the tool reports success, set \`isBookingComplete\` to true.
-      7. If the user's message is not related to booking, or if they say "no" to the confirmation, you can respond naturally, but set \`requiresFollowUp\` to false so the main action can take over.
+      7. If the user's message is not related to booking, or if they say "no" to the confirmation, you should respond naturally. Set \`isBookingComplete\` to false and \`requiresFollowUp\` to false. This allows the main action handler to fall back to the FAQ flow.
 
       ${museumAndEventContext}
       `,
@@ -124,7 +125,17 @@ const chatbotBookTicketFlow = ai.defineFlow(
         schema: ChatbotBookTicketOutputSchema
       }
     });
+    
+    // Ensure we always return a valid output, even if the model fails to generate one.
+    const output = llmResponse.output();
+    if (output) {
+      return output;
+    }
 
-    return llmResponse.output()!;
+    return {
+        isBookingComplete: false,
+        requiresFollowUp: true,
+        followUpMessage: "I'm sorry, I'm having a little trouble. Could you please rephrase that?"
+    };
   }
 );
