@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,7 @@ export default function MyBookingsPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  const bookingsQuery = useMemoFirebase(() => {
+  const bookingsQuery = useMemo(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'users', user.uid, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore, user?.uid]);

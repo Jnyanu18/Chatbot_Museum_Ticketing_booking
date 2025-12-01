@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useState, useMemo } from 'react';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, addDoc, serverTimestamp, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import type { Museum } from '@/lib/types';
 import {
@@ -124,7 +124,7 @@ export default function MuseumsPage() {
   const [selectedMuseum, setSelectedMuseum] = useState<Museum | null>(null);
   const { toast } = useToast();
 
-  const museumsQuery = useMemoFirebase(() => {
+  const museumsQuery = useMemo(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'museums'), orderBy('name'));
   }, [firestore]);

@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useState, useMemo } from 'react';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, addDoc, serverTimestamp, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import type { Event, Museum } from '@/lib/types';
 import {
@@ -157,12 +157,12 @@ export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { toast } = useToast();
 
-  const eventsQuery = useMemoFirebase(() => {
+  const eventsQuery = useMemo(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'events'), orderBy('date', 'desc'));
   }, [firestore]);
 
-  const museumsQuery = useMemoFirebase(() => {
+  const museumsQuery = useMemo(() => {
     if(!firestore) return null;
     return collection(firestore, 'museums');
   }, [firestore]);
@@ -342,5 +342,3 @@ export default function EventsPage() {
     </Dialog>
   );
 }
-
-    
