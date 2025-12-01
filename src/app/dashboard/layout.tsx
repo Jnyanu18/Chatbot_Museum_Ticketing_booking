@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useEffect, useState } from 'react';
 
 export default function DashboardLayout({
   children,
@@ -26,6 +27,11 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const isAdminPage = pathname.startsWith('/admin');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   return (
     <SidebarProvider>
@@ -67,7 +73,7 @@ export default function DashboardLayout({
           </DropdownMenu>
         </header>
         <main className="flex-1 overflow-auto p-4 sm:px-6 sm:py-0">
-            {children}
+            {isClient ? children : null}
         </main>
       </SidebarInset>
     </SidebarProvider>
