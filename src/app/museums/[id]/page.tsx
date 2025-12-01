@@ -127,7 +127,7 @@ export default function MuseumDetailPage({ params }: { params: { id: string } })
                                 <div className="mt-2 space-y-2 text-sm text-muted-foreground">
                                     <div className="flex items-center gap-2">
                                         <Calendar className="h-4 w-4"/>
-                                        <span>{new Date(event.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric'})}</span>
+                                        <span>{event.date}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-4 w-4"/>

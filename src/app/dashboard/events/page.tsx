@@ -254,7 +254,7 @@ export default function EventsPage() {
                 <CardContent className="space-y-2 text-sm">
                     <div className="flex justify-between">
                     <span className="text-muted-foreground">Date:</span>
-                    <span>{new Date(event.date).toLocaleDateString()}</span>
+                    <span>{event.date}</span>
                     </div>
                     <div className="flex justify-between">
                     <span className="text-muted-foreground">Price:</span>
@@ -294,7 +294,7 @@ export default function EventsPage() {
                     <TableCell>
                         <Badge variant="outline">{getMuseumName(event.museumId)}</Badge>
                     </TableCell>
-                    <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{event.date}</TableCell>
                     <TableCell>${event.basePrice.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                         <DropdownMenu>

@@ -82,7 +82,7 @@ export default function MyBookingsPage() {
                 <CardContent className="space-y-2 text-sm">
                    <div className="flex justify-between">
                      <span className="text-muted-foreground">Date:</span>
-                     <span>{new Date(booking.eventDate).toLocaleDateString()}</span>
+                     <span>{booking.eventDate}</span>
                    </div>
                    <div className="flex justify-between">
                      <span className="text-muted-foreground">Tickets:</span>
@@ -135,7 +135,7 @@ export default function MyBookingsPage() {
                     </TableCell>
                     <TableCell>{booking.museumName}</TableCell>
                     <TableCell>
-                      {new Date(booking.eventDate).toLocaleDateString()}
+                      {booking.eventDate}
                     </TableCell>
                     <TableCell>{booking.numTickets}</TableCell>
                     <TableCell>

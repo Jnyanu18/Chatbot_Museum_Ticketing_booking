@@ -24,7 +24,7 @@ const TicketPDF = forwardRef<HTMLDivElement, TicketPDFProps>(({ booking }, ref) 
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-gray-500" />
-              <span className="font-medium">{new Date(booking.eventDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}</span>
+              <span className="font-medium">{booking.eventDate}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="w-4 h-4 text-gray-500" />
