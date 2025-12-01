@@ -4,26 +4,21 @@ import { useState, useEffect } from "react"
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false)
-  const [hasMounted, setHasMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    setHasMounted(true);
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
-
-    checkIsMobile()
+    // Check on mount (client-side only)
+    checkIsMobile();
+    
+    // Add event listener for window resize
     window.addEventListener("resize", checkIsMobile)
 
-    return () => window.removeEventListener("resize", checkIsMobile)
+    // Cleanup event listener on component unmount
+    return () => window.removeEventListener("resize", checkIsisMobile)
   }, [])
-
-  // By returning false when the component has not yet mounted,
-  // we ensure that the server-rendered output matches the initial client render.
-  if (!hasMounted) {
-    return false;
-  }
 
   return isMobile;
 }
