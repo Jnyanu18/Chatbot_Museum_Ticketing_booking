@@ -28,13 +28,10 @@ import {
   X,
   Loader2,
   CreditCard,
-  Building2,
-  Calendar,
-  Users,
   AlertCircle,
 } from 'lucide-react';
-import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -77,6 +74,7 @@ export default function NewBookingPage() {
         variant: 'destructive',
         title: 'Authentication Required',
         description: 'Please log in to create a booking.',
+        duration: 5000,
       });
       router.push('/login');
       return;
@@ -128,7 +126,7 @@ export default function NewBookingPage() {
       museumName: MUSEUMS.find((m) => m.id === selectedMuseum)?.name || 'N/A',
       eventDate: event.date,
       slot: `${event.startTime}-${event.endTime}`,
-      paymentId: `payment-${Date.now()}`,
+      paymentId: `manual-${Date.now()}`,
       qrId: `qr-${Date.now()}`,
     };
 
@@ -141,13 +139,14 @@ export default function NewBookingPage() {
     );
 
     try {
-      setDocumentNonBlocking(bookingDocRef, bookingData, { merge: false });
+      await setDoc(bookingDocRef, bookingData);
       setPendingBooking(bookingData);
       toast({
         title: 'Booking Pending',
         description: `Your booking is ready for payment.`,
       });
     } catch (error) {
+      console.error("Booking creation error: ", error);
       toast({
         variant: 'destructive',
         title: 'Booking Failed',
@@ -161,8 +160,7 @@ export default function NewBookingPage() {
   const handleSimulatePayment = async () => {
     if (!pendingBooking || !firestore || !user) return;
     setIsProcessingPayment(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
+    
     const updatedBookingData: Booking = { ...pendingBooking, status: 'paid' };
     const bookingDocRef = doc(firestore, 'users', user.uid, 'bookings', pendingBooking.id);
     
@@ -172,15 +170,16 @@ export default function NewBookingPage() {
       userId: pendingBooking.userId,
       amount: pendingBooking.pricePaid,
       currency: pendingBooking.currency,
-      provider: 'stripe',
+      provider: 'simulated',
       status: 'succeeded',
       createdAt: new Date().toISOString(),
     };
     const paymentDocRef = doc(firestore, 'payments', pendingBooking.paymentId!);
 
     try {
-      setDocumentNonBlocking(bookingDocRef, updatedBookingData, { merge: true });
-      setDocumentNonBlocking(paymentDocRef, paymentData, { merge: false });
+      await setDoc(bookingDocRef, updatedBookingData, { merge: true });
+      await setDoc(paymentDocRef, paymentData);
+      
       toast({
         title: 'Payment Successful!',
         description: 'Your booking is confirmed.',
@@ -189,6 +188,7 @@ export default function NewBookingPage() {
       setPendingBooking(null);
       setIsConfirmationOpen(true);
     } catch (error) {
+       console.error("Payment processing error: ", error);
       toast({
         variant: 'destructive',
         title: 'Payment Failed',
@@ -221,9 +221,8 @@ export default function NewBookingPage() {
   };
   
   const handleCancelPayment = () => {
-    if(!pendingBooking || !firestore || !user) return;
-    const bookingDocRef = doc(firestore, 'users', user.uid, 'bookings', pendingBooking.id);
-    // You might want to delete the pending booking from Firestore here
+    // In a real app, you might want to delete the pending booking from Firestore here.
+    // For this simulation, we'll just clear the local state.
     setPendingBooking(null);
     toast({
         title: 'Booking Cancelled',
@@ -405,9 +404,9 @@ export default function NewBookingPage() {
           <div className="my-4 flex justify-center">
             {confirmedBooking && (
               <div className="w-[350px] origin-top scale-75 transform">
-                <div ref={ticketRef}>
-                  <TicketPDF booking={confirmedBooking} />
-                </div>
+                 <div ref={ticketRef}>
+                   <TicketPDF booking={confirmedBooking} />
+                 </div>
               </div>
             )}
           </div>
