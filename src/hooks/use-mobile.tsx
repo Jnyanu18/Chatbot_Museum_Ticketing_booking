@@ -19,5 +19,11 @@ export function useIsMobile() {
     return () => window.removeEventListener("resize", checkIsMobile)
   }, [])
 
-  return hasMounted ? isMobile : false;
+  // By returning false when the component has not yet mounted,
+  // we ensure that the server-rendered output matches the initial client render.
+  if (!hasMounted) {
+    return false;
+  }
+
+  return isMobile;
 }
