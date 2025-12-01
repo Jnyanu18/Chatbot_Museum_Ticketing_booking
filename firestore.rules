@@ -90,7 +90,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
+      allow list: if isSignedIn();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if (isExistingOwner(userId) && request.resource.data.id == resource.data.id) || isAdmin();
       allow delete: if isExistingOwner(userId) || isAdmin();
@@ -236,7 +236,7 @@ service cloud.firestore {
      * @allow create: if isStaff();
      * @allow update: if false;
      * @allow delete: if isStaff();
-     * @principle DBAC Existence over Content.
+_     * @principle DBAC Existence over Content.
      */
       match /roles_staff/{uid} {
         allow get: if isStaff();
