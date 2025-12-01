@@ -54,6 +54,7 @@ export default function DashboardSidebar() {
   const isViewingAdmin = pathname.startsWith('/admin');
 
   const isActive = (href: string) => {
+    // Exact match for dashboard/admin root, prefix match for sub-pages.
     if (href === '/dashboard' || href === '/admin') {
         return pathname === href;
     }
@@ -77,7 +78,22 @@ export default function DashboardSidebar() {
         {isViewingAdmin && isAdmin ? (
             <>
                 <SidebarMenu>
-                     <SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={isActive('/dashboard')}
+                            tooltip={{ children: 'User Dashboard' }}
+                        >
+                           <Link href="/dashboard">
+                                <AreaChart />
+                                <span>User Dashboard</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+                <Separator className="my-2"/>
+                <SidebarMenu>
+                    <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
                             isActive={isActive('/admin')}
@@ -89,9 +105,6 @@ export default function DashboardSidebar() {
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
-                </SidebarMenu>
-                <Separator className="my-2"/>
-                <SidebarMenu>
                     {adminLinks.map(link => (
                         <SidebarMenuItem key={link.href}>
                             <SidebarMenuButton
@@ -109,7 +122,7 @@ export default function DashboardSidebar() {
                 </SidebarMenu>
             </>
         ) : (
-            <SidebarMenu>
+             <SidebarMenu>
                 {commonLinks.map(link => (
                     <SidebarMenuItem key={link.href}>
                         <SidebarMenuButton
@@ -124,6 +137,20 @@ export default function DashboardSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 ))}
+                 {isAdmin && (
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={isActive('/admin')}
+                            tooltip={{ children: "Admin Dashboard" }}
+                        >
+                            <Link href="/admin">
+                                <ShieldCheck />
+                                <span>Admin Dashboard</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                 )}
             </SidebarMenu>
         )}
         
