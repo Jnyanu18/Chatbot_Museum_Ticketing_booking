@@ -1,9 +1,8 @@
 'use server';
 
 import { chatbotFAQAssistance } from '@/ai/flows/chatbot-faq-assistance';
-import { chatbotRecognizesBookingIntent } from '@/ai/flows/chatbot-recognizes-booking-intent';
+import { chatbotBookTicket } from '@/ai/flows/chatbot-book-ticket';
 import { translateText } from '@/ai/flows/translate-ui-chatbot-responses';
-import { chatbotSuggestVisitTimes } from '@/ai/flows/chatbot-suggest-visit-times';
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 
@@ -35,41 +34,19 @@ export async function getChatbotResponse(history: ChatMessage[], newUserMessage:
     let botResponse = "I'm sorry, I couldn't understand that. Can you please rephrase?";
     
     try {
-        // 1. Check for booking intent
-        const bookingIntent = await chatbotRecognizesBookingIntent({
-            message: newUserMessage,
+        // 1. Try to handle booking intent first
+        const bookingResponse = await chatbotBookTicket({
             userId: userId,
+            message: newUserMessage,
+            history: history,
         });
 
-        if (bookingIntent.intentRecognized && bookingIntent.followUpMessage) {
-            
-            // 2. If booking intent, suggest visit times
-            try {
-                const today = new Date();
-                const visitTimes = await chatbotSuggestVisitTimes({
-                    museumId: bookingIntent.suggestedMuseums?.[0]?.museumId || 'museum-1',
-                    date: today.toISOString().split('T')[0],
-                    currentHour: today.getHours(),
-                });
-
-                if (visitTimes.suggestedTimes && visitTimes.suggestedTimes.length > 0) {
-                    const timeSuggestions = visitTimes.suggestedTimes.map(t => 
-                        `${t.startTime} - ${t.endTime} (Crowd: ${t.crowdLevel})`
-                    ).join('\n');
-                    
-                    botResponse = `${bookingIntent.followUpMessage}\n\nHere are some suggested times:\n${timeSuggestions}\n\nWould you like to book for any of these times?`;
-                } else {
-                    botResponse = bookingIntent.followUpMessage;
-                }
-
-            } catch (e) {
-                console.error("Error getting visit times:", e);
-                // Fallback to the original booking intent message
-                 botResponse = bookingIntent.followUpMessage;
-            }
-
+        if (bookingResponse.isBookingComplete) {
+            botResponse = `Your booking is confirmed! You will receive a confirmation shortly. Is there anything else I can help you with?`;
+        } else if (bookingResponse.requiresFollowUp) {
+            botResponse = bookingResponse.followUpMessage;
         } else {
-            // 3. If no booking intent, handle as FAQ
+            // 2. If not a booking query, handle as a general FAQ
             const faqResponse = await chatbotFAQAssistance({
                 query: newUserMessage,
             });
@@ -85,7 +62,9 @@ export async function getChatbotResponse(history: ChatMessage[], newUserMessage:
     }
 
     // Save the conversation to Firestore
-    await saveChatMessage(userId, newUserMessage, botResponse);
+    if(botResponse) {
+        await saveChatMessage(userId, newUserMessage, botResponse);
+    }
 
     return botResponse;
 }
