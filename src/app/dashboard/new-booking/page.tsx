@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Card,
@@ -21,7 +21,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { MUSEUMS, EVENTS } from '@/lib/data';
 import {
   Download,
   Ticket,
@@ -29,10 +28,11 @@ import {
   Loader2,
   CreditCard,
   AlertCircle,
+  ArrowLeft,
 } from 'lucide-react';
-import { useFirestore, useUser } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
-import type { Booking } from '@/lib/types';
+import { useFirestore, useUser, useCollection } from '@/firebase';
+import { doc, setDoc, addDoc, collection, query, serverTimestamp } from 'firebase/firestore';
+import type { Booking, Museum, Event } from '@/lib/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import TicketPDF from '@/components/TicketPDF';
@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 
 export default function NewBookingPage() {
   const { toast } = useToast();
@@ -67,6 +68,19 @@ export default function NewBookingPage() {
 
   const ticketRef = useRef<HTMLDivElement>(null);
 
+  const museumsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'museums'));
+  }, [firestore]);
+
+  const eventsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'events'));
+  }, [firestore]);
+
+  const { data: museums, isLoading: areMuseumsLoading } = useCollection<Museum>(museumsQuery);
+  const { data: events, isLoading: areEventsLoading } = useCollection<Event>(eventsQuery);
+
   useEffect(() => {
     if (isUserLoading) return;
     if (!user) {
@@ -85,13 +99,13 @@ export default function NewBookingPage() {
   useEffect(() => {
     const museumId = searchParams.get('museumId');
     const eventId = searchParams.get('eventId');
-    if (museumId) {
+    if (museumId && museums?.some(m => m.id === museumId)) {
       setSelectedMuseum(museumId);
     }
-    if (eventId) {
+    if (eventId && events?.some(e => e.id === eventId)) {
       setSelectedEvent(eventId);
     }
-  }, [searchParams]);
+  }, [searchParams, museums, events]);
 
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,15 +119,14 @@ export default function NewBookingPage() {
     }
 
     setIsProcessingBooking(true);
-    const event = EVENTS.find((e) => e.id === selectedEvent);
+    const event = events?.find((e) => e.id === selectedEvent);
     if (!event || !firestore) {
       setIsProcessingBooking(false);
       return;
     }
 
-    const newBookingId = `booking-${Date.now()}`;
-    const bookingData: Booking = {
-      id: newBookingId,
+    const newBookingId = doc(collection(firestore, 'id_generator')).id;
+    const bookingData: Omit<Booking, 'id'> = {
       userId: userId,
       eventId: selectedEvent,
       museumId: selectedMuseum,
@@ -123,24 +136,16 @@ export default function NewBookingPage() {
       status: 'pending',
       createdAt: new Date(),
       eventTitle: event.title,
-      museumName: MUSEUMS.find((m) => m.id === selectedMuseum)?.name || 'N/A',
+      museumName: museums?.find((m) => m.id === selectedMuseum)?.name || 'N/A',
       eventDate: event.date,
       slot: `${event.startTime}-${event.endTime}`,
-      paymentId: `manual-${Date.now()}`,
-      qrId: `qr-${Date.now()}`,
+      paymentId: `manual-${newBookingId}`,
+      qrId: `qr-${newBookingId}`,
     };
 
-    const bookingDocRef = doc(
-      firestore,
-      'users',
-      userId,
-      'bookings',
-      newBookingId
-    );
-
     try {
-      await setDoc(bookingDocRef, bookingData);
-      setPendingBooking(bookingData);
+      // We are creating a pending booking, so we can show a confirmation screen before payment
+      setPendingBooking({ ...bookingData, id: newBookingId });
       toast({
         title: 'Booking Pending',
         description: `Your booking is ready for payment.`,
@@ -161,7 +166,7 @@ export default function NewBookingPage() {
     if (!pendingBooking || !firestore || !user) return;
     setIsProcessingPayment(true);
     
-    const updatedBookingData: Booking = { ...pendingBooking, status: 'paid' };
+    const updatedBookingData: Booking = { ...pendingBooking, status: 'paid', createdAt: serverTimestamp() as any };
     const bookingDocRef = doc(firestore, 'users', user.uid, 'bookings', pendingBooking.id);
     
     const paymentData = {
@@ -172,12 +177,12 @@ export default function NewBookingPage() {
       currency: pendingBooking.currency,
       provider: 'simulated',
       status: 'succeeded',
-      createdAt: new Date().toISOString(),
+      createdAt: serverTimestamp(),
     };
     const paymentDocRef = doc(firestore, 'payments', pendingBooking.paymentId!);
 
     try {
-      await setDoc(bookingDocRef, updatedBookingData, { merge: true });
+      await setDoc(bookingDocRef, updatedBookingData);
       await setDoc(paymentDocRef, paymentData);
       
       toast({
@@ -218,11 +223,10 @@ export default function NewBookingPage() {
     setSelectedMuseum('');
     setSelectedEvent('');
     setNumTickets(1);
+    router.push('/dashboard/bookings');
   };
   
   const handleCancelPayment = () => {
-    // In a real app, you might want to delete the pending booking from Firestore here.
-    // For this simulation, we'll just clear the local state.
     setPendingBooking(null);
     toast({
         title: 'Booking Cancelled',
@@ -230,11 +234,17 @@ export default function NewBookingPage() {
     });
   }
 
-  const filteredEvents = selectedMuseum ? EVENTS.filter((event) => event.museumId === selectedMuseum) : [];
-  const selectedEventDetails = EVENTS.find((e) => e.id === selectedEvent);
+  const filteredEvents = useMemo(() => {
+    return selectedMuseum && events ? events.filter((event) => event.museumId === selectedMuseum) : [];
+  }, [selectedMuseum, events]);
+  
+  const selectedEventDetails = useMemo(() => {
+     return events?.find((e) => e.id === selectedEvent);
+  }, [selectedEvent, events]);
+
   const totalPrice = selectedEventDetails ? (selectedEventDetails.basePrice * numTickets) : 0;
   
-  const isFormSubmittable = !isUserLoading && userId && selectedMuseum && selectedEvent && numTickets > 0;
+  const isFormSubmittable = !isUserLoading && userId && selectedMuseum && selectedEvent && numTickets > 0 && !areMuseumsLoading && !areEventsLoading;
 
   return (
     <>
@@ -283,12 +293,12 @@ export default function NewBookingPage() {
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="museum">Museum</Label>
-                      <Select value={selectedMuseum} onValueChange={setSelectedMuseum}>
+                      <Select value={selectedMuseum} onValueChange={setSelectedMuseum} disabled={areMuseumsLoading}>
                         <SelectTrigger id="museum" className="w-full">
-                          <SelectValue placeholder="Select a museum" />
+                          <SelectValue placeholder={areMuseumsLoading ? "Loading museums..." : "Select a museum"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {MUSEUMS.map((museum) => (
+                          {museums?.map((museum) => (
                             <SelectItem key={museum.id} value={museum.id}>
                               {museum.name}
                             </SelectItem>
@@ -301,10 +311,10 @@ export default function NewBookingPage() {
                       <Select
                         value={selectedEvent}
                         onValueChange={setSelectedEvent}
-                        disabled={!selectedMuseum}
+                        disabled={!selectedMuseum || areEventsLoading}
                       >
                         <SelectTrigger id="event" className="w-full">
-                          <SelectValue placeholder="Select an event" />
+                          <SelectValue placeholder={areEventsLoading ? "Loading events..." : "Select an event"} />
                         </SelectTrigger>
                         <SelectContent>
                           {filteredEvents.map((event) => (
@@ -312,7 +322,7 @@ export default function NewBookingPage() {
                               {event.title}
                             </SelectItem>
                           ))}
-                          {selectedMuseum && filteredEvents.length === 0 && (
+                          {selectedMuseum && filteredEvents.length === 0 && !areEventsLoading && (
                             <div className="p-4 text-center text-sm text-muted-foreground">
                               No events for this museum.
                             </div>
@@ -345,7 +355,7 @@ export default function NewBookingPage() {
                        <p className="text-xs text-muted-foreground">This is the ID of the logged-in user.</p>
                     </div>
                   </div>
-                  <CardFooter className="px-0">
+                   <CardFooter className="px-0 pt-6">
                     <Button type="submit" disabled={!isFormSubmittable || isProcessingBooking}>
                        {isProcessingBooking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Ticket className="mr-2 h-4 w-4" />}
                        {isProcessingBooking ? "Creating..." : "Proceed to Payment"}
@@ -363,7 +373,7 @@ export default function NewBookingPage() {
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">Museum</span>
-                            <span className="font-medium text-right">{MUSEUMS.find(m => m.id === selectedMuseum)?.name || '-'}</span>
+                            <span className="font-medium text-right">{museums?.find(m => m.id === selectedMuseum)?.name || '-'}</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">Event</span>
@@ -410,12 +420,12 @@ export default function NewBookingPage() {
               </div>
             )}
           </div>
-          <AlertDialogFooter className="sm:justify-between">
-            <Button variant="outline" onClick={handleCloseConfirmation}>
-              <X className="mr-2 h-4 w-4" /> Close
-            </Button>
+          <AlertDialogFooter className="sm:justify-between flex flex-row-reverse sm:flex-row">
             <Button onClick={handleDownloadPdf}>
               <Download className="mr-2 h-4 w-4" /> Download PDF
+            </Button>
+            <Button variant="outline" onClick={handleCloseConfirmation}>
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Bookings
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
