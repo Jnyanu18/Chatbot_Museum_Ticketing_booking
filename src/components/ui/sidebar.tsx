@@ -183,7 +183,7 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { state, openMobile, setOpenMobile } = useSidebar()
+    const { state, openMobile, setOpenMobile } = useSidebar();
     const isMobile = useIsMobile();
     const isMounted = useIsMounted();
 
@@ -203,7 +203,13 @@ const Sidebar = React.forwardRef<
       )
     }
 
-    if (isMounted && isMobile) {
+    if (!isMounted) {
+      // On the server, and the first client render, render a placeholder or nothing.
+      // This ensures the server and client HTML match.
+      return null;
+    }
+    
+    if (isMobile) {
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent
