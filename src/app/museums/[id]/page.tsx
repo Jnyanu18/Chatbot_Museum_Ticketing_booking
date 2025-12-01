@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Building2, Calendar, Clock, MapPin, Ticket } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 
 import Header from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,10 @@ import { useFirestore } from "@/firebase";
 import { useMemo } from "react";
 import type { Museum, Event } from "@/lib/types";
 
-export default function MuseumDetailPage({ params }: { params: { id: string } }) {
+export default function MuseumDetailPage() {
   const firestore = useFirestore();
-  const museumId = params.id;
+  const params = useParams();
+  const museumId = params.id as string;
 
   const museumRef = useMemo(() => {
     if (!firestore || !museumId) return null;
