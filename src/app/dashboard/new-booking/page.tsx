@@ -30,9 +30,9 @@ import {
   AlertCircle,
   ArrowLeft,
 } from 'lucide-react';
-import { useFirestore, useUser, useCollection } from '@/firebase';
-import { doc, setDoc, collection, query, serverTimestamp, addDoc } from 'firebase/firestore';
+import { useUser } from '@/firebase';
 import type { Booking, Museum, Event } from '@/lib/types';
+import { MUSEUMS, EVENTS } from '@/lib/data';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import TicketPDF from '@/components/TicketPDF';
@@ -53,7 +53,6 @@ export default function NewBookingPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
 
   const [selectedMuseum, setSelectedMuseum] = useState('');
   const [selectedEvent, setSelectedEvent] = useState('');
@@ -68,18 +67,10 @@ export default function NewBookingPage() {
 
   const ticketRef = useRef<HTMLDivElement>(null);
 
-  const museumsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'museums'));
-  }, [firestore]);
-
-  const eventsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'events'));
-  }, [firestore]);
-
-  const { data: museums, isLoading: areMuseumsLoading } = useCollection<Museum>(museumsQuery);
-  const { data: events, isLoading: areEventsLoading } = useCollection<Event>(eventsQuery);
+  const museums = MUSEUMS;
+  const events = EVENTS;
+  const areMuseumsLoading = false;
+  const areEventsLoading = false;
 
   useEffect(() => {
     if (isUserLoading) return;
@@ -120,12 +111,14 @@ export default function NewBookingPage() {
 
     setIsProcessingBooking(true);
     const event = events?.find((e) => e.id === selectedEvent);
-    if (!event || !firestore) {
+    if (!event) {
       setIsProcessingBooking(false);
       return;
     }
 
-    const newBookingId = doc(collection(firestore, 'id_generator')).id;
+    // This is a mock booking ID generation.
+    const newBookingId = `booking-${Date.now()}`;
+
     const bookingData: Omit<Booking, 'id'> = {
       userId: userId,
       eventId: selectedEvent,
@@ -163,27 +156,14 @@ export default function NewBookingPage() {
   };
 
   const handleSimulatePayment = async () => {
-    if (!pendingBooking || !firestore || !user) return;
+    if (!pendingBooking || !user) return;
     setIsProcessingPayment(true);
     
-    const updatedBookingData: Booking = { ...pendingBooking, status: 'paid', createdAt: serverTimestamp() as any };
-    const bookingDocRef = doc(firestore, 'users', user.uid, 'bookings', pendingBooking.id);
-    
-    const paymentData = {
-      id: pendingBooking.paymentId,
-      bookingId: pendingBooking.id,
-      userId: pendingBooking.userId,
-      amount: pendingBooking.pricePaid,
-      currency: pendingBooking.currency,
-      provider: 'simulated',
-      status: 'succeeded',
-      createdAt: serverTimestamp(),
-    };
-    const paymentCollectionRef = collection(firestore, 'payments');
+    // This simulates saving to a database. In a real app this would be a Firestore write.
+    const updatedBookingData: Booking = { ...pendingBooking, status: 'paid' };
 
     try {
-      await setDoc(bookingDocRef, updatedBookingData);
-      await addDoc(paymentCollectionRef, paymentData);
+      console.log('Simulating payment and saving booking:', updatedBookingData);
       
       setConfirmedBooking(updatedBookingData);
       setPendingBooking(null);
