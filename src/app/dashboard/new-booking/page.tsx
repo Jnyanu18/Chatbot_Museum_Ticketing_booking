@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -236,11 +237,19 @@ export default function NewBookingPage() {
   return (
     <>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold font-headline">New Booking</h1>
-          <p className="text-muted-foreground">
-            Create a new ticket booking.
-          </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold font-headline">New Booking</h1>
+            <p className="text-muted-foreground">
+              Create a new ticket booking.
+            </p>
+          </div>
+          <Button asChild variant="outline">
+            <Link href="/">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Link>
+          </Button>
         </div>
 
         {pendingBooking ? (
