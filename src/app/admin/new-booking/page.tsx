@@ -223,7 +223,7 @@ export default function NewBookingPage() {
     setSelectedMuseum('');
     setSelectedEvent('');
     setNumTickets(1);
-    router.push('/dashboard/bookings');
+    router.push('/admin/new-booking');
   };
   
   const handleCancelPayment = () => {

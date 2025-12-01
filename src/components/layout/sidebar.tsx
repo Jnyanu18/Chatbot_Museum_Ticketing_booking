@@ -19,6 +19,7 @@ import {
   Bot,
   Percent,
   PlusCircle,
+  ShieldCheck,
 } from 'lucide-react';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -48,12 +49,12 @@ const commonLinks = [
 ];
 
 const adminLinks = [
-  { href: '/dashboard/new-booking', label: 'New Booking', icon: PlusCircle },
-  { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart },
-  { href: '/dashboard/museums', label: 'Museums', icon: Building2 },
-  { href: '/dashboard/events', label: 'Events', icon: Calendar },
-  { href: '/dashboard/promotions', label: 'Promotions', icon: Percent },
-  { href: '/dashboard/users', label: 'Users', icon: Users },
+  { href: '/admin/new-booking', label: 'New Booking', icon: PlusCircle },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
+  { href: '/admin/museums', label: 'Museums', icon: Building2 },
+  { href: '/admin/events', label: 'Events', icon: Calendar },
+  { href: '/admin/promotions', label: 'Promotions', icon: Percent },
+  { href: '/admin/users', label: 'Users', icon: Users },
 ];
 
 export default function DashboardSidebar() {
@@ -65,9 +66,14 @@ export default function DashboardSidebar() {
   // This is a placeholder for role management.
   // In a real app, this would come from custom claims or a database lookup.
   const isAdmin = true; 
+  const isViewingAdmin = pathname.startsWith('/admin');
 
   const isActive = (href: string) => {
-    return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+    // Exact match for dashboard, prefix match for others
+    if (href === '/dashboard' || href === '/admin') {
+        return pathname === href;
+    }
+    return pathname.startsWith(href);
   };
 
   const handleLogout = async () => {
@@ -84,53 +90,68 @@ export default function DashboardSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2">
-        <SidebarMenu>
-            {commonLinks.map(link => (
-                <SidebarMenuItem key={link.href}>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isActive(link.href)}
-                        tooltip={{ children: link.label }}
-                    >
-                        <Link href={link.href}>
-                            <link.icon />
-                            <span>{link.label}</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            ))}
-        </SidebarMenu>
-
-        {isAdmin && (
+        {isViewingAdmin && isAdmin ? (
             <>
-            <Separator className="my-4"/>
-            <SidebarGroup>
-                <SidebarGroupLabel>Admin</SidebarGroupLabel>
                 <SidebarMenu>
-                    {adminLinks.map(link => (
-                        <SidebarMenuItem key={link.href}>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={isActive(link.href)}
-                                tooltip={{ children: link.label }}
-                            >
-                                <Link href={link.href}>
-                                    <link.icon />
-                                    <span>{link.label}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
+                     <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={isActive('/admin')}
+                            tooltip={{ children: 'Admin Dashboard' }}
+                        >
+                            <Link href="/admin">
+                                <ShieldCheck />
+                                <span>Admin Dashboard</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
                 </SidebarMenu>
-            </SidebarGroup>
+                <Separator className="my-2"/>
+                <SidebarGroup>
+                    <SidebarGroupLabel>Manage</SidebarGroupLabel>
+                    <SidebarMenu>
+                        {adminLinks.map(link => (
+                            <SidebarMenuItem key={link.href}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isActive(link.href)}
+                                    tooltip={{ children: link.label }}
+                                >
+                                    <Link href={link.href}>
+                                        <link.icon />
+                                        <span>{link.label}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
+                </SidebarGroup>
             </>
+        ) : (
+            <SidebarMenu>
+                {commonLinks.map(link => (
+                    <SidebarMenuItem key={link.href}>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={isActive(link.href)}
+                            tooltip={{ children: link.label }}
+                        >
+                            <Link href={link.href}>
+                                <link.icon />
+                                <span>{link.label}</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                ))}
+            </SidebarMenu>
         )}
+        
       </SidebarContent>
       <SidebarFooter className="p-2">
           <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/dashboard/settings')} tooltip={{ children: 'Settings' }}>
-                    <Link href="/dashboard/settings"><Settings /> <span>Settings</span></Link>
+                <SidebarMenuButton asChild isActive={isActive(isViewingAdmin && isAdmin ? '/admin/settings' : '/dashboard/settings')} tooltip={{ children: 'Settings' }}>
+                    <Link href={isViewingAdmin && isAdmin ? '/admin/settings' : '/dashboard/settings'}><Settings /> <span>Settings</span></Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
