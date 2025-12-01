@@ -36,6 +36,7 @@ const commonLinks = [
 ];
 
 const adminLinks = [
+  { href: '/admin', label: 'Admin Dashboard', icon: ShieldCheck },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
   { href: '/admin/museums', label: 'Museums', icon: Building2 },
   { href: '/admin/events', label: 'Events', icon: Calendar },
@@ -66,6 +67,8 @@ export default function DashboardSidebar() {
     router.push('/login');
   };
   
+  const linksToShow = isViewingAdmin && isAdmin ? adminLinks : commonLinks;
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -75,84 +78,50 @@ export default function DashboardSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2">
-        {isViewingAdmin && isAdmin ? (
-            <>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            asChild
-                            isActive={isActive('/dashboard')}
-                            tooltip={{ children: 'User Dashboard' }}
-                        >
-                           <Link href="/dashboard">
-                                <AreaChart />
-                                <span>User Dashboard</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-                <Separator className="my-2"/>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            asChild
-                            isActive={isActive('/admin')}
-                            tooltip={{ children: 'Admin Dashboard' }}
-                        >
-                            <Link href="/admin">
-                                <ShieldCheck />
-                                <span>Admin Dashboard</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    {adminLinks.map(link => (
-                        <SidebarMenuItem key={link.href}>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={isActive(link.href)}
-                                tooltip={{ children: link.label }}
-                            >
-                                <Link href={link.href}>
-                                    <link.icon />
-                                    <span>{link.label}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
-                </SidebarMenu>
-            </>
-        ) : (
-             <SidebarMenu>
-                {commonLinks.map(link => (
-                    <SidebarMenuItem key={link.href}>
-                        <SidebarMenuButton
-                            asChild
-                            isActive={isActive(link.href)}
-                            tooltip={{ children: link.label }}
-                        >
-                            <Link href={link.href}>
-                                <link.icon />
-                                <span>{link.label}</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                ))}
-                 {isAdmin && (
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            asChild
-                            isActive={isActive('/admin')}
-                            tooltip={{ children: "Admin Dashboard" }}
-                        >
-                            <Link href="/admin">
-                                <ShieldCheck />
-                                <span>Admin Dashboard</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                 )}
-            </SidebarMenu>
-        )}
+          <SidebarMenu>
+            {linksToShow.map(link => (
+                <SidebarMenuItem key={link.href}>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={isActive(link.href)}
+                        tooltip={{ children: link.label }}
+                    >
+                        <Link href={link.href}>
+                            <link.icon />
+                            <span>{link.label}</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))}
+             {isAdmin && !isViewingAdmin && (
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={isActive('/admin')}
+                        tooltip={{ children: "Admin Dashboard" }}
+                    >
+                        <Link href="/admin">
+                            <ShieldCheck />
+                            <span>Admin</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+             )}
+             {isAdmin && isViewingAdmin && (
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={isActive('/dashboard')}
+                        tooltip={{ children: "User Dashboard" }}
+                    >
+                        <Link href="/dashboard">
+                            <AreaChart />
+                            <span>User Dashboard</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+             )}
+        </SidebarMenu>
         
       </SidebarContent>
       <SidebarFooter className="p-2">
