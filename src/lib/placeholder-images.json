@@ -27,13 +27,13 @@
     {
       "id": "museum-4",
       "description": "Prado Museum exterior facade",
-      "imageUrl": "https://images.unsplash.com/photo-1665322049384-e56e9ce06e68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjbGFzc2ljYWwlMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzYzNDM4OTk4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1665322049384-e56e-9ce06e68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjbGFzc2ljYWwlMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzYzNDM4OTk4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "classical architecture"
     },
     {
       "id": "museum-5",
       "description": "Rijksmuseum in Amsterdam",
-      "imageUrl": "https://images.unsplash.com/photo-1665325598734-fd7ea739dcb2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkdXRjaCUyMG11c2V1bXxlbnwwfHx8fDE3NjM0Mzg5OTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1665325598734-fd7ea739dcb2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkdXRjaCUyMG11c2V1bXxlbnwwfHx8fDE3NjM0Mzg5OTh8MA&ixlibrb-4.1.0&q=80&w=1080",
       "imageHint": "dutch museum"
     },
     {
@@ -51,7 +51,7 @@
     {
       "id": "museum-8",
       "description": "Indian Museum in Kolkata",
-      "imageUrl": "https://images.unsplash.com/photo-1610413233831-29471b402518?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxLb2xrYXRhJTIwbXVzZXVtfGVufDB8fHx8MTc2MzQ5NzM4N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1610045828351-3f9737ca7bd0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxLb2xrYXRhJTIwbXVzZXVtfGVufDB8fHx8MTc2NDU2MDUxMHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "Kolkata museum"
     },
     {
