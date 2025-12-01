@@ -29,6 +29,7 @@ import {
   CreditCard,
   AlertCircle,
   ArrowLeft,
+  Home,
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import type { Booking, Museum, Event } from '@/lib/types';
@@ -120,7 +121,7 @@ export default function NewBookingPage() {
     const newBookingId = `booking-${Date.now()}`;
 
     const bookingData: Omit<Booking, 'id'> = {
-      userId: userId,
+      userId: user?.uid || 'anonymous',
       eventId: selectedEvent,
       museumId: selectedMuseum,
       numTickets: numTickets,
@@ -205,6 +206,12 @@ export default function NewBookingPage() {
     setNumTickets(1);
     router.push('/dashboard/bookings');
   };
+
+  const handleGoHome = () => {
+    setIsConfirmationOpen(false);
+    setConfirmedBooking(null);
+    router.push('/');
+  }
   
   const handleCancelPayment = () => {
     setPendingBooking(null);
@@ -400,12 +407,15 @@ export default function NewBookingPage() {
               </div>
             )}
           </div>
-          <AlertDialogFooter className="sm:justify-between flex flex-row-reverse sm:flex-row">
-            <Button onClick={handleDownloadPdf}>
-              <Download className="mr-2 h-4 w-4" /> Download PDF
+          <AlertDialogFooter className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <Button onClick={handleDownloadPdf} className="sm:col-span-1">
+              <Download className="mr-2 h-4 w-4" /> Download
             </Button>
-            <Button variant="outline" onClick={handleCloseConfirmation}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Bookings
+            <Button variant="outline" onClick={handleCloseConfirmation} className="sm:col-span-1">
+              <ArrowLeft className="mr-2 h-4 w-4" /> My Bookings
+            </Button>
+            <Button variant="secondary" onClick={handleGoHome} className="sm:col-span-1">
+                <Home className="mr-2 h-4 w-4" /> Main Page
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -413,3 +423,5 @@ export default function NewBookingPage() {
     </>
   );
 }
+
+    
