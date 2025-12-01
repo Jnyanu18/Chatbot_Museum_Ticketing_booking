@@ -100,7 +100,7 @@ service cloud.firestore {
      * @description Rule for /museums/{museumId} documents.
      * @path /museums/{museumId}
      * @allow (get, list) - Any user can read museum information.
-     * @deny (create, update, delete) - Only authenticated admin user can create, update or delete museum information.
+     * @allow (create, update, delete) - Only authenticated admin user can create, update or delete museum information.
      * @principle Allows public read access while restricting write access to admins.
      */
     match /museums/{museumId} {
@@ -112,7 +112,7 @@ service cloud.firestore {
      * @description Rule for /events/{eventId} documents.
      * @path /events/{eventId}
      * @allow (get, list) - Any user can read event information.
-     * @deny (create, update, delete) - Only authenticated admin user can create, update or delete event information.
+     * @allow (create, update, delete) - Only authenticated admin user can create, update or delete event information.
      * @principle Allows public read access while restricting write access to admins.
      */
     match /events/{eventId} {
@@ -130,8 +130,7 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/bookings/{bookingId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isOwner(userId) || isAdmin();
+      allow get, list: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow update: if (isExistingOwner(userId) && request.resource.data.userId == resource.data.userId) || isAdmin();
       allow delete: if isExistingOwner(userId) || isAdmin();
