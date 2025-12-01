@@ -8,16 +8,20 @@ export function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkIsMobile = () => {
+    const checkDevice = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     };
 
-    // Check on mount (client-side only) and add listener
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
+    // Initial check
+    checkDevice();
 
-    // Cleanup event listener on component unmount
-    return () => window.removeEventListener('resize', checkIsMobile);
+    // Listener for window resize
+    window.addEventListener('resize', checkDevice);
+
+    // Cleanup listener
+    return () => {
+      window.removeEventListener('resize', checkDevice);
+    };
   }, []);
 
   return isMobile;
