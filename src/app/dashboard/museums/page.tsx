@@ -72,7 +72,7 @@ function MuseumForm({
       },
       // Hardcode some defaults for fields not in the form
       openHours: museum?.openHours || [{ day: 'Mon-Sun', open: '10:00', close: '17:00' }],
-      imageUrl: museum?.imageUrl || 'https://picsum.photos/seed/new-museum/600/400',
+      imageUrl: museum?.imageUrl || `https://picsum.photos/seed/${formData.name.replace(/\s+/g, '-')}/600/400`,
       imageHint: museum?.imageHint || 'museum exterior',
     };
 
@@ -122,6 +122,7 @@ export default function MuseumsPage() {
   const firestore = useFirestore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedMuseum, setSelectedMuseum] = useState<Museum | null>(null);
+  const { toast } = useToast();
 
   const museumsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -147,7 +148,13 @@ export default function MuseumsPage() {
   const handleDeleteMuseum = async (museumId: string) => {
     if (!firestore) return;
     if (window.confirm("Are you sure you want to delete this museum? This action cannot be undone.")) {
-        await deleteDoc(doc(firestore, "museums", museumId));
+        try {
+            await deleteDoc(doc(firestore, "museums", museumId));
+            toast({ title: "Museum Deleted", description: "The museum has been successfully deleted." });
+        } catch (error) {
+            console.error("Error deleting museum: ", error);
+            toast({ variant: "destructive", title: "Delete Failed", description: "Could not delete the museum. It may have associated events or bookings."});
+        }
     }
   }
 
@@ -238,7 +245,7 @@ export default function MuseumsPage() {
                               <DropdownMenuItem onClick={() => openEditDialog(museum)}>
                                 <Edit className="mr-2 h-4 w-4" /> Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteMuseum(museum.id)} className="text-destructive">
+                              <DropdownMenuItem onClick={() => handleDeleteMuseum(museum.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>

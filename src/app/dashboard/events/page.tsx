@@ -59,7 +59,7 @@ function EventForm({
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
@@ -71,8 +71,18 @@ function EventForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    
+    // Add image placeholders
+    const eventData = {
+      ...formData,
+      basePrice: Number(formData.basePrice),
+      capacity: Number(formData.capacity),
+      imageUrl: event?.imageUrl || `https://picsum.photos/seed/${formData.title.replace(/\s+/g, '-')}/400/200`,
+      imageHint: event?.imageHint || 'event photo',
+    }
+
     try {
-      await onSave(formData);
+      await onSave(eventData);
       toast({ title: event ? 'Event Updated' : 'Event Created', description: 'The event has been saved successfully.' });
       onClose();
     } catch (error) {
@@ -113,7 +123,7 @@ function EventForm({
             </div>
              <div className="space-y-2">
                 <Label htmlFor="basePrice">Base Price ($)</Label>
-                <Input id="basePrice" type="number" value={formData.basePrice} onChange={handleChange} required min="0" />
+                <Input id="basePrice" type="number" value={formData.basePrice} onChange={handleChange} required min="0" step="0.01"/>
             </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -182,8 +192,14 @@ export default function EventsPage() {
   const handleDeleteEvent = async (eventId: string) => {
     if (!firestore) throw new Error('Firestore not initialized');
     if(window.confirm('Are you sure you want to delete this event?')) {
-        const eventRef = doc(firestore, 'events', eventId);
-        await deleteDoc(eventRef);
+        try {
+            const eventRef = doc(firestore, 'events', eventId);
+            await deleteDoc(eventRef);
+             toast({ title: 'Event Deleted', description: 'The event has been successfully deleted.' });
+        } catch(error) {
+            console.error("Error deleting event:", error);
+            toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the event.' });
+        }
     }
   };
   
@@ -198,6 +214,7 @@ export default function EventsPage() {
   }
   
   const isLoading = areEventsLoading || areMuseumsLoading;
+  const { toast } = useToast();
 
   return (
      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -290,7 +307,7 @@ export default function EventsPage() {
                             <DropdownMenuItem onClick={() => openEditDialog(event)}>
                                 <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteEvent(event.id)} className="text-destructive">
+                            <DropdownMenuItem onClick={() => handleDeleteEvent(event.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                         </DropdownMenuContent>
