@@ -7,7 +7,7 @@ import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import {
@@ -75,6 +75,10 @@ export default function Header() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="pr-0">
+             <SheetHeader className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+              <SheetDescription>Main navigation links for the MuseumConnect application.</SheetDescription>
+            </SheetHeader>
             <Link href="/" className="mr-6 flex items-center space-x-2">
                 <Building2 className="h-6 w-6 text-primary" />
                 <span className="font-bold font-headline text-lg">
