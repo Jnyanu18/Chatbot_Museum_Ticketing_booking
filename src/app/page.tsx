@@ -1,33 +1,43 @@
+
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Building2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { MUSEUMS } from '@/lib/data';
+import { useCollection, useFirestore } from '@/firebase';
+import type { Museum } from '@/lib/types';
 import Header from '@/components/layout/header';
 import ChatbotWidget from '@/components/chatbot-widget';
+import { collection, query, limit } from 'firebase/firestore';
+import { useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 export default function Home() {
-  const featuredMuseums = MUSEUMS.slice(0, 3);
-  const heroImage = PlaceHolderImages.find(p => p.id === 'hero');
+    const firestore = useFirestore();
+
+    const featuredMuseumsQuery = useMemo(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'museums'), limit(3));
+    }, [firestore]);
+
+    const { data: featuredMuseums, isLoading } = useCollection<Museum>(featuredMuseumsQuery);
 
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
       <main className="flex-1">
         <section className="relative w-full h-[60vh] md:h-[80vh]">
-          {heroImage && (
             <Image
-              src={heroImage.imageUrl}
+              src="https://picsum.photos/seed/hero/1280/720"
               alt="Hero background image of a museum"
               fill
               className="object-cover"
-              data-ai-hint={heroImage.imageHint}
+              data-ai-hint="museum interior"
               priority
             />
-          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20" />
           <div className="relative container mx-auto flex h-full flex-col items-center justify-center text-center text-white">
             <h1 className="font-headline text-4xl font-bold md:text-7xl">
@@ -57,21 +67,32 @@ export default function Home() {
               </div>
             </div>
             <div className="mx-auto grid grid-cols-1 gap-6 py-12 sm:grid-cols-2 lg:grid-cols-3">
-              {featuredMuseums.map((museum) => {
-                const museumImage = PlaceHolderImages.find(p => p.id === museum.id);
-                return (
-                  <Card key={museum.id} className="overflow-hidden transition-all hover:shadow-lg">
+              {isLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i}>
+                        <Skeleton className="aspect-video w-full" />
+                        <CardContent className="p-6 space-y-2">
+                            <Skeleton className="h-6 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
+                        </CardContent>
+                        <CardFooter>
+                            <Skeleton className="h-10 w-full" />
+                        </CardFooter>
+                    </Card>
+                  ))
+              ) : featuredMuseums?.map((museum) => (
+                  <Card key={museum.id} className="overflow-hidden transition-all hover:shadow-lg flex flex-col">
                     <CardHeader className="p-0">
                       <Link href={`/museums/${museum.id}`}>
                         <div className="aspect-video w-full overflow-hidden">
-                          {museumImage ? (
+                          {museum.imageUrl ? (
                              <Image
-                               src={museumImage.imageUrl}
+                               src={museum.imageUrl}
                                alt={museum.name}
                                width={600}
                                height={400}
                                className="w-full object-cover transition-transform hover:scale-105"
-                               data-ai-hint={museumImage.imageHint}
+                               data-ai-hint={museum.imageHint}
                               />
                           ) : (
                             <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -81,7 +102,7 @@ export default function Home() {
                         </div>
                       </Link>
                     </CardHeader>
-                    <CardContent className="p-6">
+                    <CardContent className="p-6 flex-grow">
                       <CardTitle className="font-headline text-2xl">{museum.name}</CardTitle>
                       <CardDescription className="mt-2">{museum.location.city}, {museum.location.country}</CardDescription>
                     </CardContent>
@@ -91,8 +112,8 @@ export default function Home() {
                        </Button>
                     </CardFooter>
                   </Card>
-                );
-              })}
+                ))
+              }
             </div>
              <div className="text-center">
                 <Button asChild variant="outline">
