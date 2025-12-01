@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -87,7 +88,7 @@ export default function DashboardPage() {
                         <Ticket className="h-16 w-16 text-muted-foreground" />
                         <h3 className="text-xl font-semibold">Ready for an adventure?</h3>
                         <p className="text-muted-foreground">
-                        You haven&apos;t booked any tickets yet. Let&apos;s find something amazing.
+                        You haven't booked any tickets yet. Let's find something amazing.
                         </p>
                         <Button asChild>
                         <Link href="/museums">Explore Museums</Link>

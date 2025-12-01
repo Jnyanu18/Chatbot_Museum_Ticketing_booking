@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -11,14 +12,6 @@ import {
   Ticket,
   Users,
   LogOut,
-  Bell,
-  BarChart3,
-  PieChart,
-  GitCommitHorizontal,
-  ScanLine,
-  Bot,
-  Percent,
-  PlusCircle,
   ShieldCheck,
 } from 'lucide-react';
 import { useUser, useAuth } from '@/firebase';
@@ -32,14 +25,8 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
-  SidebarGroup,
-  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '../ui/separator';
 import { Skeleton } from '../ui/skeleton';
 
@@ -49,11 +36,9 @@ const commonLinks = [
 ];
 
 const adminLinks = [
-  { href: '/admin/new-booking', label: 'New Booking', icon: PlusCircle },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
   { href: '/admin/museums', label: 'Museums', icon: Building2 },
   { href: '/admin/events', label: 'Events', icon: Calendar },
-  { href: '/admin/promotions', label: 'Promotions', icon: Percent },
   { href: '/admin/users', label: 'Users', icon: Users },
 ];
 
@@ -69,7 +54,6 @@ export default function DashboardSidebar() {
   const isViewingAdmin = pathname.startsWith('/admin');
 
   const isActive = (href: string) => {
-    // Exact match for dashboard, prefix match for others
     if (href === '/dashboard' || href === '/admin') {
         return pathname === href;
     }
@@ -107,25 +91,22 @@ export default function DashboardSidebar() {
                     </SidebarMenuItem>
                 </SidebarMenu>
                 <Separator className="my-2"/>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Manage</SidebarGroupLabel>
-                    <SidebarMenu>
-                        {adminLinks.map(link => (
-                            <SidebarMenuItem key={link.href}>
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={isActive(link.href)}
-                                    tooltip={{ children: link.label }}
-                                >
-                                    <Link href={link.href}>
-                                        <link.icon />
-                                        <span>{link.label}</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        ))}
-                    </SidebarMenu>
-                </SidebarGroup>
+                <SidebarMenu>
+                    {adminLinks.map(link => (
+                        <SidebarMenuItem key={link.href}>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isActive(link.href)}
+                                tooltip={{ children: link.label }}
+                            >
+                                <Link href={link.href}>
+                                    <link.icon />
+                                    <span>{link.label}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                </SidebarMenu>
             </>
         ) : (
             <SidebarMenu>

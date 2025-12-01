@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -182,7 +183,7 @@ export default function MyBookingsPage() {
             <Ticket className="h-16 w-16 text-muted-foreground" />
             <h3 className="text-xl font-semibold">No Bookings Found</h3>
             <p className="text-muted-foreground">
-              You haven&apos;t booked any tickets yet.
+              You haven't booked any tickets yet.
             </p>
             <Button asChild>
               <Link href="/dashboard/new-booking">Create a Booking</Link>

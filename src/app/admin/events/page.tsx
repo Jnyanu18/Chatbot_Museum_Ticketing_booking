@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
@@ -72,7 +73,6 @@ function EventForm({
     e.preventDefault();
     setIsSaving(true);
     
-    // Add image placeholders and ensure numeric types
     const eventData = {
       ...formData,
       basePrice: Number(formData.basePrice),
@@ -177,10 +177,10 @@ export default function EventsPage() {
   const handleSaveEvent = async (eventData: Partial<Event>) => {
     if (!firestore) throw new Error('Firestore not initialized');
     
-    if (selectedEvent) { // Editing existing event
+    if (selectedEvent) {
       const eventRef = doc(firestore, 'events', selectedEvent.id);
       await updateDoc(eventRef, eventData);
-    } else { // Creating new event
+    } else {
       const newEventData = {
         ...eventData,
         bookedCount: 0,
@@ -254,7 +254,7 @@ export default function EventsPage() {
                 <CardContent className="space-y-2 text-sm">
                     <div className="flex justify-between">
                     <span className="text-muted-foreground">Date:</span>
-                    <span>{new Date(event.date).toLocaleDateString()}</span>
+                    <span>{event.date}</span>
                     </div>
                     <div className="flex justify-between">
                     <span className="text-muted-foreground">Price:</span>
@@ -294,7 +294,7 @@ export default function EventsPage() {
                     <TableCell>
                         <Badge variant="outline">{getMuseumName(event.museumId)}</Badge>
                     </TableCell>
-                    <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{event.date}</TableCell>
                     <TableCell>${event.basePrice.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                         <DropdownMenu>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -70,7 +71,6 @@ function MuseumForm({
         city: formData['location.city'],
         country: formData['location.country'],
       },
-      // Hardcode some defaults for fields not in the form
       openHours: museum?.openHours || [{ day: 'Mon-Sun', open: '10:00', close: '17:00' }],
       imageUrl: museum?.imageUrl || `https://picsum.photos/seed/${formData.name.replace(/\s+/g, '-')}/600/400`,
       imageHint: museum?.imageHint || 'museum exterior',
@@ -134,10 +134,10 @@ export default function MuseumsPage() {
   const handleSaveMuseum = async (museumData: Partial<Museum>) => {
     if (!firestore) throw new Error("Firestore not available");
     
-    if(selectedMuseum) { // Editing existing museum
+    if(selectedMuseum) {
         const museumRef = doc(firestore, 'museums', selectedMuseum.id);
         await updateDoc(museumRef, museumData);
-    } else { // Creating new museum
+    } else {
         await addDoc(collection(firestore, 'museums'), {
             ...museumData,
             createdAt: serverTimestamp(),
