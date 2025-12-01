@@ -1,5 +1,5 @@
 
-import { AreaChart, BarChart, Building2, Ticket, Users } from 'lucide-react';
+import { AreaChart, BarChart, Building2, Ticket, Users, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,27 @@ const quickStats = [
     { title: "Today's Bookings", value: "85", change: "+20%", icon: Ticket },
     { title: "New Users", value: "32", change: "+5%", icon: Users },
     { title: "Active Museums", value: "5", change: "", icon: Building2 },
+]
+
+const managementSections = [
+    {
+        title: "Analytics",
+        description: "View detailed insights and reports on your museum operations.",
+        href: "/admin/analytics",
+        icon: BarChart,
+    },
+    {
+        title: "Manage Events",
+        description: "Create, edit, and manage all events across your museums.",
+        href: "/admin/events",
+        icon: Calendar,
+    },
+    {
+        title: "Manage Museums",
+        description: "Add, update, and manage museum details and information.",
+        href: "/admin/museums",
+        icon: Building2,
+    }
 ]
 
 export default function AdminDashboardPage() {
@@ -37,32 +58,25 @@ export default function AdminDashboardPage() {
             ))}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Bookings Over Time</CardTitle>
-                    <CardDescription>Last 7 days</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <BookingsOverTimeChart data={bookingsOverTimeData}/>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Revenue by Museum</CardTitle>
-                     <CardDescription>All time revenue distribution</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <RevenueByMuseumChart data={revenueByMuseumData}/>
-                </CardContent>
-            </Card>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+             {managementSections.map((section) => (
+                <Card key={section.title} className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <section.icon className="h-6 w-6 text-primary"/>
+                            <span>{section.title}</span>
+                        </CardTitle>
+                        <CardDescription>{section.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                         <Button asChild className="w-full">
+                            <Link href={section.href}>Go to {section.title}</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            ))}
         </div>
         
-        <div className="text-center">
-            <Button asChild>
-                <Link href="/admin/analytics">View Full Analytics</Link>
-            </Button>
-        </div>
     </div>
   );
 }
