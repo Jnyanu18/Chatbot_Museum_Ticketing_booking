@@ -1,3 +1,4 @@
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Building2 } from 'lucide-react';
@@ -5,10 +6,20 @@ import Header from '@/components/layout/header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { MUSEUMS } from '@/lib/data';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
+import type { Museum } from '@/lib/types';
+import { useMemo } from 'react';
 
 export default function MuseumsPage() {
+  const firestore = useFirestore();
+  const museumsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'museums'));
+  }, [firestore]);
+
+  const { data: museums, isLoading } = useCollection<Museum>(museumsQuery);
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
@@ -27,21 +38,19 @@ export default function MuseumsPage() {
           </div>
 
           <div className="mx-auto grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {MUSEUMS.map((museum) => {
-              const museumImage = PlaceHolderImages.find(p => p.id === museum.id);
-              return (
+            {isLoading ? <p>Loading museums...</p> : museums?.map((museum) => (
                 <Card key={museum.id} className="overflow-hidden transition-all hover:shadow-lg flex flex-col">
                   <CardHeader className="p-0">
                     <Link href={`/museums/${museum.id}`}>
                       <div className="aspect-video w-full overflow-hidden">
-                        {museumImage ? (
+                        {museum.imageUrl ? (
                           <Image
-                             src={museumImage.imageUrl}
+                             src={museum.imageUrl}
                              alt={museum.name}
                              width={600}
                              height={400}
                              className="w-full object-cover transition-transform hover:scale-105"
-                             data-ai-hint={museumImage.imageHint}
+                             data-ai-hint={museum.imageHint}
                            />
                         ) : (
                           <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -61,8 +70,7 @@ export default function MuseumsPage() {
                     </Button>
                   </CardFooter>
                 </Card>
-              );
-            })}
+              ))}
           </div>
         </div>
       </main>

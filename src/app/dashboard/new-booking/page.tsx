@@ -30,7 +30,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { useFirestore, useUser, useCollection } from '@/firebase';
-import { doc, setDoc, collection, query, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, collection, query, serverTimestamp, addDoc } from 'firebase/firestore';
 import type { Booking, Museum, Event } from '@/lib/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -178,19 +178,19 @@ export default function NewBookingPage() {
       status: 'succeeded',
       createdAt: serverTimestamp(),
     };
-    const paymentDocRef = doc(firestore, 'payments', pendingBooking.paymentId!);
+    const paymentCollectionRef = collection(firestore, 'payments');
 
     try {
       await setDoc(bookingDocRef, updatedBookingData);
-      await setDoc(paymentDocRef, paymentData);
+      await addDoc(paymentCollectionRef, paymentData);
       
+      setConfirmedBooking(updatedBookingData);
+      setPendingBooking(null);
+      setIsConfirmationOpen(true);
       toast({
         title: 'Payment Successful!',
         description: 'Your booking is confirmed.',
       });
-      setConfirmedBooking(updatedBookingData);
-      setPendingBooking(null);
-      setIsConfirmationOpen(true);
     } catch (error) {
        console.error("Payment processing error: ", error);
       toast({
