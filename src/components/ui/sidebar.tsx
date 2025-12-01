@@ -182,6 +182,7 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isClient, state, openMobile, setOpenMobile } = useSidebar()
+    const isMobile = useIsMobile();
 
     if (collapsible === "none") {
       return (
@@ -198,7 +199,7 @@ const Sidebar = React.forwardRef<
       )
     }
 
-    if (isClient && useIsMobile()) {
+    if (isClient && isMobile) {
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent
@@ -277,16 +278,17 @@ const SidebarTrigger = React.forwardRef<
 >(({ className, onClick, ...props }, ref) => {
   const { toggleSidebar } = useSidebar();
   const [mounted, setMounted] = React.useState(false);
-  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
+  const isMobile = useIsMobile();
+
   if (!mounted || !isMobile) {
     return null;
   }
-
+  
   return (
     <Button
       ref={ref}
@@ -783,5 +785,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    
