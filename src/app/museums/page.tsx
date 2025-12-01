@@ -8,17 +8,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
+import { MUSEUMS } from '@/lib/data';
 import type { Museum } from '@/lib/types';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function MuseumsPage() {
-  const firestore = useFirestore();
-  const museumsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'museums'));
-  }, [firestore]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: museums, isLoading } = useCollection<Museum>(museumsQuery);
+  const filteredMuseums = useMemo(() => {
+    if (!searchQuery) return MUSEUMS;
+    return MUSEUMS.filter(museum =>
+      museum.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      museum.location.city.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -34,11 +37,17 @@ export default function MuseumsPage() {
             </p>
           </div>
           <div className="mb-8 max-w-md mx-auto">
-             <Input type="search" placeholder="Search for museums..." className="w-full" />
+             <Input 
+                type="search" 
+                placeholder="Search for museums..." 
+                className="w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+             />
           </div>
 
           <div className="mx-auto grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {isLoading ? <p>Loading museums...</p> : museums?.map((museum) => (
+            {filteredMuseums.map((museum) => (
                 <Card key={museum.id} className="overflow-hidden transition-all hover:shadow-lg flex flex-col">
                   <CardHeader className="p-0">
                     <Link href={`/museums/${museum.id}`}>
