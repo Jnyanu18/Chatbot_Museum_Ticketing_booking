@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Building2, Calendar, Clock, MapPin, Ticket } from "lucide-react";
-import { notFound, usePathname } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import Header from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -17,16 +17,17 @@ import type { Museum, Event } from "@/lib/types";
 
 export default function MuseumDetailPage({ params }: { params: { id: string } }) {
   const firestore = useFirestore();
+  const museumId = params.id;
 
   const museumRef = useMemo(() => {
-    if (!firestore || !params.id) return null;
-    return doc(firestore, 'museums', params.id);
-  }, [firestore, params.id]);
+    if (!firestore || !museumId) return null;
+    return doc(firestore, 'museums', museumId);
+  }, [firestore, museumId]);
 
   const eventsQuery = useMemo(() => {
-    if (!firestore || !params.id) return null;
-    return query(collection(firestore, 'events'), where('museumId', '==', params.id));
-  }, [firestore, params.id]);
+    if (!firestore || !museumId) return null;
+    return query(collection(firestore, 'events'), where('museumId', '==', museumId));
+  }, [firestore, museumId]);
   
   const { data: museum, isLoading: isMuseumLoading } = useDoc<Museum>(museumRef);
   const { data: museumEvents, isLoading: areEventsLoading } = useCollection<Event>(eventsQuery);
