@@ -4,7 +4,7 @@
  *
  * Core Philosophy:
  *  - Strict user-ownership for data under `/users/{userId}`. Only the authenticated user can read and write their own data.
- *  - Public read access for museum, event, and promotion data. Anyone can read this information.
+ *  - Public read access for museum and event data. Anyone can read this information.
  *  - Backend-only write access for payment information, chat intents, and daily metrics.
  *  - Role-based access for admin and staff, managed by the existence of documents in `/roles_admin/{uid}` and `/roles_staff/{uid}`.
  *
@@ -89,35 +89,35 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow update: if (isExistingOwner(userId) && request.resource.data.id == resource.data.id) || isAdmin();
+      allow delete: if isExistingOwner(userId) || isAdmin();
     }
 
     /**
      * @description Rule for /museums/{museumId} documents.
      * @path /museums/{museumId}
      * @allow (get, list) - Any user can read museum information.
-     * @deny (create, update, delete) - Only authenticated user can create, update or delete museum information.
-     * @principle Allows public read access while restricting write access.
+     * @deny (create, update, delete) - Only authenticated admin user can create, update or delete museum information.
+     * @principle Allows public read access while restricting write access to admins.
      */
     match /museums/{museumId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create, update, delete: if isAdmin();
     }
 
     /**
      * @description Rule for /events/{eventId} documents.
      * @path /events/{eventId}
      * @allow (get, list) - Any user can read event information.
-     * @deny (create, update, delete) - Only authenticated user can create, update or delete event information.
-     * @principle Allows public read access while restricting write access.
+     * @deny (create, update, delete) - Only authenticated admin user can create, update or delete event information.
+     * @principle Allows public read access while restricting write access to admins.
      */
     match /events/{eventId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create, update, delete: if isAdmin();
     }
 
     /**
@@ -130,11 +130,11 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/bookings/{bookingId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
+      allow update: if (isExistingOwner(userId) && request.resource.data.userId == resource.data.userId) || isAdmin();
+      allow delete: if isExistingOwner(userId) || isAdmin();
     }
     
     /**
@@ -159,7 +159,7 @@ service cloud.firestore {
      * @principle Restricts write access to the backend and read access to the owner.
      */
     match /payments/{paymentId} {
-      allow get: if isSignedIn() && request.auth.uid == resource.data.userId;
+      allow get: if (isSignedIn() && request.auth.uid == resource.data.userId) || isAdmin();
       // Allow create for simulation purposes. In production, this should be false and handled by a backend.
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow list, update, delete: if false;
