@@ -24,14 +24,13 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Download,
   Ticket,
-  X,
   Loader2,
   CreditCard,
   AlertCircle,
   ArrowLeft,
 } from 'lucide-react';
 import { useFirestore, useUser, useCollection } from '@/firebase';
-import { doc, setDoc, addDoc, collection, query, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, collection, query, serverTimestamp } from 'firebase/firestore';
 import type { Booking, Museum, Event } from '@/lib/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -223,7 +222,7 @@ export default function NewBookingPage() {
     setSelectedMuseum('');
     setSelectedEvent('');
     setNumTickets(1);
-    router.push('/admin/new-booking');
+    router.push('/dashboard/bookings');
   };
   
   const handleCancelPayment = () => {
@@ -250,9 +249,9 @@ export default function NewBookingPage() {
     <>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold font-headline">New Manual Booking</h1>
+          <h1 className="text-3xl font-bold font-headline">New Booking</h1>
           <p className="text-muted-foreground">
-            Create a new ticket booking for a user.
+            Create a new ticket booking.
           </p>
         </div>
 
@@ -433,5 +432,3 @@ export default function NewBookingPage() {
     </>
   );
 }
-
-    
