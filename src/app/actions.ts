@@ -30,6 +30,8 @@ async function saveChatMessage(userId: string, userMessage: string, botResponse:
 export async function getChatbotResponse(history: ChatMessage[], newUserMessage: string): Promise<string> {
     const userId = 'session-123'; // In a real app, this would be the actual user ID
     let botResponse = "I'm sorry, I couldn't understand that. Can you please rephrase?";
+
+    // We pass the full history including the new message to the flows
     const currentHistory = [...history, { role: 'user' as const, content: newUserMessage }];
     
     try {
@@ -39,18 +41,17 @@ export async function getChatbotResponse(history: ChatMessage[], newUserMessage:
             message: newUserMessage,
         });
 
-        // A simple way to check if we are in a booking conversation by checking previous messages.
-        const wasBooking = history.some(m => m.role === 'bot' && m.content.toLowerCase().includes('book'));
-
-        if (intentRecognition.intentRecognized || wasBooking) {
-            // Step 2a: If booking intent is recognized or was in progress, use the booking flow
+        // The booking flow is now smart enough to know if a booking is in progress
+        // by looking at the history.
+        if (intentRecognition.intentRecognized) {
+            // Step 2a: If booking intent is recognized, use the booking flow
             const bookingResponse = await chatbotBookTicket({
                 userId: userId,
                 history: currentHistory, // Pass the full history
             });
 
             if (bookingResponse.isBookingComplete) {
-                botResponse = `Your booking is confirmed! You will receive a confirmation shortly. Is there anything else I can help you with?`;
+                botResponse = bookingResponse.followUpMessage;
             } else if (bookingResponse.requiresFollowUp) {
                 botResponse = bookingResponse.followUpMessage;
             } else {

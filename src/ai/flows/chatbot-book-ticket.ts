@@ -46,7 +46,7 @@ const createBookingTool = ai.defineTool(
     name: 'createBooking',
     description: 'Creates a museum ticket booking in the database. Call this ONLY when you have all required information and the user has confirmed they want to proceed.',
     inputSchema: createBookingSchema,
-    outputSchema: z.object({ success: z.boolean() }),
+    outputSchema: z.object({ success: z.boolean(), confirmationMessage: z.string() }),
   },
   async (input) => {
     console.log('Creating booking with tool:', input);
@@ -56,7 +56,7 @@ const createBookingTool = ai.defineTool(
 
     if (!event || !museum) {
       console.error('Event or Museum not found for booking');
-      return { success: false };
+      return { success: false, confirmationMessage: "I'm sorry, I couldn't find the details for that event or museum." };
     }
 
     const newBooking: Omit<Booking, 'id'> = {
@@ -79,10 +79,11 @@ const createBookingTool = ai.defineTool(
             ...newBooking,
             createdAt: serverTimestamp(),
         });
-        return { success: true };
+        const confirmation = `Your booking is confirmed! You'll receive details for your ${input.numTickets} tickets to ${event.title} shortly.`;
+        return { success: true, confirmationMessage: confirmation };
     } catch(e) {
         console.error('Firestore error in createBookingTool:', e);
-        return { success: false };
+        return { success: false, confirmationMessage: "I'm sorry, there was an error while creating your booking. Please try again later." };
     }
   }
 );
@@ -108,11 +109,11 @@ const chatbotBookTicketFlow = ai.defineFlow(
     const llmResponse = await ai.generate({
       prompt: `You are a museum ticketing chatbot. Your goal is to help the user book a ticket based on the provided conversation history.
       1. Analyze the conversation history to determine what information you already have (museum, event, number of tickets).
-      2. If information is missing, ask clarifying questions one by one. Do not ask for information you already have.
+      2. If information is missing, ask clarifying questions one by one. Do not ask for information you already have. For example, if you don't know the event, ask "Which event are you interested in?". If you don't know how many tickets, ask "How many tickets would you like?".
       3. Use the provided context to find valid museum and event IDs based on the user's request.
       4. Once you have all the required information (museumId, eventId, numTickets), you MUST confirm with the user before calling the booking tool. For example: "Just to confirm, you want to book [numTickets] tickets for [Event Name] at [Museum Name]. Is that correct?"
       5. If the user confirms, and only then, call the \`createBooking\` tool with the collected details.
-      6. If the tool call is successful, set \`isBookingComplete\` to true and provide a confirmation message.
+      6. After the tool call, use its output message as your final response. If the tool reports success, set \`isBookingComplete\` to true.
       7. If the user's message is not related to booking, or if they say "no" to the confirmation, you can respond naturally, but set \`requiresFollowUp\` to false so the main action can take over.
 
       ${museumAndEventContext}
