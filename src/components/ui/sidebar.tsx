@@ -275,17 +275,17 @@ const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar, isClient } = useSidebar();
+  const { toggleSidebar } = useSidebar();
+  const [mounted, setMounted] = React.useState(false);
   const isMobile = useIsMobile();
 
-  if (!isClient) {
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || !isMobile) {
     return null;
   }
-
-  if (!isMobile) {
-    return null;
-  }
-
 
   return (
     <Button
