@@ -60,4 +60,5 @@ export type Promotion = {
   discountPercent: number;
   code: string;
   active: boolean;
+  targetDays?: ('Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday')[];
 };

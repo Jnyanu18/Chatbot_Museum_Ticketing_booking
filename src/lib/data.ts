@@ -271,8 +271,9 @@ export const abandonedBookingsData = [
 ];
 
 export const PROMOTIONS: Promotion[] = [
-    { id: 'promo-1', title: 'Summer Special', description: '15% off on all tickets', discountPercent: 15, code: 'SUMMER15', active: true },
-    { id: 'promo-2', title: 'Family Pack', description: '20% off for family bookings', discountPercent: 20, code: 'FAMILY20', active: true },
+    { id: 'promo-1', title: 'Summer Special', description: '15% off on all tickets', discountPercent: 15, code: 'SUMMER15', active: true, targetDays: ['Saturday', 'Sunday'] },
+    { id: 'promo-2', title: 'Family Pack', description: '20% off for family bookings of 4+', discountPercent: 20, code: 'FAMILY20', active: true },
+    { id: 'promo-3', title: 'Weekday Wonders', description: '15% off on Tuesday-Thursday tickets', discountPercent: 15, code: 'WEEKDAY15', active: true, targetDays: ['Tuesday', 'Wednesday', 'Thursday'] },
 ];
 
 export const promotionEffectivenessData = [
