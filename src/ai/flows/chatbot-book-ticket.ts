@@ -127,7 +127,7 @@ const chatbotBookTicketFlow = ai.defineFlow(
     });
     
     // Ensure we always return a valid output, even if the model fails to generate one.
-    const output = llmResponse.output();
+    const output = llmResponse.output;
     if (output) {
       return output;
     }

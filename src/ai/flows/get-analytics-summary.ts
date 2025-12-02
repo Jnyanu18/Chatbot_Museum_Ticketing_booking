@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow that provides a comprehensive monthly analysis and executive report for the admin team.
@@ -130,7 +131,7 @@ const getAnalyticsSummaryFlow = ai.defineFlow(
       },
     });
 
-    const output = llmResponse.output();
+    const output = llmResponse.output;
     if (output) {
       return output;
     }

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow that provides project improvement suggestions based on analytics data.
@@ -72,7 +73,7 @@ const getProjectSuggestionsFlow = ai.defineFlow(
       },
     });
 
-    const output = llmResponse.output();
+    const output = llmResponse.output;
     if (output) {
       return output;
     }

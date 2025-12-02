@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -48,6 +49,6 @@ const chatbotRecognizesBookingIntentFlow = ai.defineFlow(
         }
     });
 
-    return llmResponse.output()!;
+    return llmResponse.output!;
   }
 );
