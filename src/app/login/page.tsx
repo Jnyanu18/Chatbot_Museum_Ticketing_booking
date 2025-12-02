@@ -54,7 +54,7 @@ export default function LoginPage() {
         description: "Welcome!",
       });
       router.push('/dashboard');
-    } catch (err: any) -> {
+    } catch (err: any) {
       setError(err.message);
       setIsLoading(false);
     }
