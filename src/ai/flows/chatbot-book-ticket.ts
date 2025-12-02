@@ -18,6 +18,9 @@ const createBookingSchema = z.object({
   museumId: z.string().describe('The ID of the museum.'),
   eventId: z.string().describe('The ID of the event.'),
   numTickets: z.number().describe('The number of tickets to book.'),
+  contactEmail: z.string().email().describe("The user's contact email address."),
+  visitorNames: z.array(z.string()).optional().describe("Names of the visitors."),
+  specialRequests: z.string().optional().describe("Any special requests for the booking."),
 });
 
 // Define schemas for flow input/output
@@ -28,11 +31,32 @@ const ChatbotBookTicketInputSchema = z.object({
 
 export type ChatbotBookTicketInput = z.infer<typeof ChatbotBookTicketInputSchema>;
 
-const ChatbotBookTicketOutputSchema = z.object({
-  isBookingComplete: z.boolean().describe('Set to true only when the ticket booking has been successfully confirmed and created.'),
-  requiresFollowUp: z.boolean().describe('Set to true if the chatbot needs to ask a clarifying question to the user.'),
-  followUpMessage: z.string().describe('The message to send back to the user to gather more information or confirm the booking.'),
+
+const BookingDataSchema = z.object({
+  intent: z.literal("book_ticket"),
+  museum: z.string().describe("The name of the museum."),
+  visit_date: z.string().describe("The date of the visit in YYYY-MM-DD format."),
+  visit_time: z.string().describe("The time of the visit, e.g., '11:00' or 'morning'"),
+  tickets_count: z.number().int().positive(),
+  ticket_type: z.enum(["adult", "child", "student", "senior", "mixed"]),
+  visitor_names: z.array(z.string()).optional(),
+  contact_email: z.string().email(),
+  contact_phone: z.string().optional(),
+  payment_required: z.boolean(),
+  payment_amount: z.number(),
+  payment_currency: z.string(),
+  special_requests: z.string().optional(),
+  booking_ref: z.null(),
 });
+
+
+const ChatbotBookTicketOutputSchema = z.object({
+    isBookingReady: z.boolean().describe('Set to true only when all required slots are filled and you are ready to ask for final confirmation.'),
+    isBookingComplete: z.boolean().describe('Set to true only when the ticket booking has been successfully confirmed and created by the tool.'),
+    followUpMessage: z.string().describe('The message to send back to the user to gather more information or confirm the booking.'),
+    bookingData: BookingDataSchema.optional().describe('The complete booking data object, to be included only when isBookingReady is true.'),
+});
+
 export type ChatbotBookTicketOutput = z.infer<typeof ChatbotBookTicketOutputSchema>;
 
 // Export the main function to be called from the server action
@@ -60,7 +84,7 @@ const createBookingTool = ai.defineTool(
       return { success: false, confirmationMessage: "I'm sorry, I couldn't find the details for that event or museum." };
     }
 
-    const newBooking: Omit<Booking, 'id'> = {
+    const newBooking: Omit<Booking, 'id' | 'createdAt'> = {
       userId: input.userId,
       eventId: input.eventId,
       museumId: input.museumId,
@@ -68,7 +92,6 @@ const createBookingTool = ai.defineTool(
       pricePaid: event.basePrice * input.numTickets,
       currency: 'USD',
       status: 'paid', // Simulate successful payment
-      createdAt: new Date(),
       eventTitle: event.title,
       museumName: museum.name,
       eventDate: event.date,
@@ -98,7 +121,7 @@ const chatbotBookTicketFlow = ai.defineFlow(
     outputSchema: ChatbotBookTicketOutputSchema,
   },
   async (input) => {
-    // Provide context about available museums and events to the LLM.
+    
     const museumAndEventContext = `
       Here are the available museums:
       ${MUSEUMS.map(m => `- ${m.name} (ID: ${m.id}) located in ${m.location.city}`).join('\n')}
@@ -108,16 +131,24 @@ const chatbotBookTicketFlow = ai.defineFlow(
     `;
 
     const llmResponse = await ai.generate({
-      prompt: `You are a museum ticketing chatbot. Your goal is to help the user book a ticket based on the provided conversation history.
-      1. Analyze the conversation history to determine what information you already have (museum, event, number of tickets).
-      2. If information is missing, ask clarifying questions one by one. Do not ask for information you already have. For example, if you don't know the event, ask "Which event are you interested in?". If you don't know how many tickets, ask "How many tickets would you like?".
-      3. Use the provided context to find valid museum and event IDs based on the user's request.
-      4. Once you have all the required information (museumId, eventId, numTickets), you MUST confirm with the user before calling the booking tool. For example: "Just to confirm, you want to book [numTickets] tickets for [Event Name] at [Museum Name]. Is that correct?"
-      5. If the user confirms, and only then, call the \`createBooking\` tool with the collected details.
-      6. After the tool call, use its output message as your final response. If the tool reports success, set \`isBookingComplete\` to true.
-      7. If the user's message is not related to booking, or if they say "no" to the confirmation, you should respond naturally. Set \`isBookingComplete\` to false and \`requiresFollowUp\` to false. This allows the main action handler to fall back to the FAQ flow.
+      prompt: `You are MuseBot — a friendly, conversational ticket-booking assistant for museums. Your goals:
+      1. Gather booking info via short natural chat (slot-filling): museum, visit_date (YYYY-MM-DD), visit_time (HH:MM or "morning/afternoon/evening"), tickets_count, ticket_type (adult/child/student/senior), visitor_names (optional), contact_email, contact_phone, payment_method (card/upi/cash/none), special_requests (optional).
+      2. Always be polite, helpful, concise, and confirm ambiguous inputs.
+      3. Ask only one question at a time. Validate user answers (dates in future, numbers positive, email format). If invalid, ask a corrective question.
+      4. If user asks for suggestions, recommend 3 nearby museums with a 1-line highlight each and ask which one they'd like.
+      5. When all required slots are filled, set 'isBookingReady' to true, 'followUpMessage' to a human-readable summary, AND include the machine-friendly 'bookingData' JSON object in your response. Then ask the user whether to confirm and proceed to payment.
+      6. Provide helpful defaults/suggestions (nearest available time slots, family discounts) when relevant.
+      7. Handle cancellation/rescheduling: confirm intent, show booking summary, ask for updated fields.
+      8. If user expresses privacy concerns, explain data use and ask for consent to store booking data.
+      9. Keep responses < 160 words unless user asks for details.
+      10. For unknown or out-of-scope requests, offer alternatives or escalate to a human operator by setting 'followUpMessage' to a polite fallback message.
+      11. If the user confirms the booking summary, call the 'createBooking' tool. Once the tool returns a result, set 'isBookingComplete' to true and use the tool's confirmation message as your 'followUpMessage'.
 
+      Available Data Context:
       ${museumAndEventContext}
+
+      Always end booking-ready responses with: "Shall I confirm this booking now?" or "Would you like to change anything?"
+      If the user is not trying to book a ticket, or the conversation is not related to booking, just respond naturally and set both isBookingReady and isBookingComplete to false.
       `,
       history: input.history,
       tools: [createBookingTool],
@@ -129,13 +160,25 @@ const chatbotBookTicketFlow = ai.defineFlow(
     // Ensure we always return a valid output, even if the model fails to generate one.
     const output = llmResponse.output;
     if (output) {
+      // If the booking is not ready and not complete, but there's a follow up, it's just a regular chat turn.
+      // If there's no follow-up, it means the conversation is likely not about booking.
+      // In this case, we allow the main action handler to fall back to the FAQ flow.
+      if (!output.isBookingReady && !output.isBookingComplete && !output.followUpMessage) {
+        return {
+          isBookingReady: false,
+          isBookingComplete: false,
+          followUpMessage: '', // Empty message signals fallback
+          bookingData: undefined,
+        }
+      }
       return output;
     }
 
     return {
+        isBookingReady: false,
         isBookingComplete: false,
-        requiresFollowUp: true,
-        followUpMessage: "I'm sorry, I'm having a little trouble. Could you please rephrase that?"
+        followUpMessage: "I'm sorry, I'm having a little trouble. Could you please rephrase that?",
+        bookingData: undefined,
     };
   }
 );

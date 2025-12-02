@@ -4,7 +4,6 @@
 import { chatbotFAQAssistance } from '@/ai/flows/chatbot-faq-assistance';
 import { chatbotBookTicket } from '@/ai/flows/chatbot-book-ticket';
 import { translateText } from '@/ai/flows/translate-ui-chatbot-responses';
-import { chatbotRecognizesBookingIntent } from '@/ai/flows/chatbot-recognizes-booking-intent';
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 
@@ -36,25 +35,18 @@ export async function getChatbotResponse(history: ChatMessage[], newUserMessage:
     const currentHistory = [...history, { role: 'user' as const, content: newUserMessage }];
     
     try {
-        // Step 1: Recognize intent from the latest message.
-        const intentRecognition = await chatbotRecognizesBookingIntent({
+        // Step 1: Call the main booking flow. It will handle intent recognition itself.
+        const bookingResponse = await chatbotBookTicket({
             userId: userId,
-            message: newUserMessage,
+            history: currentHistory,
         });
-        
-        const bookingInProgress = history.some(m => m.role === 'bot' && m.content.includes('Just to confirm, you want to book'));
 
-        // If booking intent is recognized OR a booking is already in progress
-        if (intentRecognition.intentRecognized || bookingInProgress) {
-            // Step 2a: Use the booking flow
-            const bookingResponse = await chatbotBookTicket({
-                userId: userId,
-                history: currentHistory, // Pass the full history
-            });
-
+        // If the booking flow provides a follow-up message, use it.
+        // An empty message means the flow decided it's not a booking-related query.
+        if (bookingResponse.followUpMessage) {
             botResponse = bookingResponse.followUpMessage;
         } else {
-            // Step 2b: If no booking intent, handle as a general FAQ
+            // Step 2: If the booking flow has nothing to say, fall back to the general FAQ flow.
             const faqResponse = await chatbotFAQAssistance({
                 query: newUserMessage,
             });
