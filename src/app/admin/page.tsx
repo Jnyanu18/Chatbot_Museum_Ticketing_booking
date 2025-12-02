@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo } from 'react';
-import { BarChart, Building2, Calendar, Users, Lightbulb } from 'lucide-react';
+import { BarChart, Building2, Calendar, Users, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +32,12 @@ const managementSections = [
         description: "Add, update, and manage museum details and information.",
         href: "/admin/museums",
         icon: Building2,
+    },
+    {
+        title: "AI Summary",
+        description: "Get a comprehensive AI-generated report on museum performance.",
+        href: "/admin/summary",
+        icon: Newspaper,
     }
 ]
 
@@ -101,7 +107,7 @@ export default function AdminDashboardPage() {
             </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
              {managementSections.map((section) => (
                 <Card key={section.title} className="flex flex-col">
                     <CardHeader>
