@@ -48,6 +48,7 @@ function MuseumForm({
     'location.address': museum?.location.address || '',
     'location.city': museum?.location.city || '',
     'location.country': museum?.location.country || '',
+    imageUrl: museum?.imageUrl?.startsWith('https://picsum.photos') ? '' : museum?.imageUrl || '',
   });
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -70,7 +71,7 @@ function MuseumForm({
         country: formData['location.country'],
       },
       openHours: museum?.openHours || [{ day: 'Mon-Sun', open: '10:00', close: '17:00' }],
-      imageUrl: museum?.imageUrl || `https://picsum.photos/seed/${formData.name.replace(/\s+/g, '-')}/600/400`,
+      imageUrl: formData.imageUrl || `https://picsum.photos/seed/${formData.name.replace(/\s+/g, '-')}/600/400`,
       imageHint: museum?.imageHint || 'museum exterior',
     };
 
@@ -95,6 +96,10 @@ function MuseumForm({
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
         <Textarea id="description" value={formData.description} onChange={handleChange} />
+      </div>
+      <div className="space-y-2">
+          <Label htmlFor="imageUrl">Image URL</Label>
+          <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png" />
       </div>
       <div className="space-y-2">
         <Label>Location</Label>

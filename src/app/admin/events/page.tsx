@@ -54,6 +54,7 @@ function EventForm({
     endTime: event?.endTime || '',
     basePrice: event?.basePrice || 0,
     capacity: event?.capacity || 0,
+    imageUrl: event?.imageUrl?.startsWith('https://picsum.photos') ? '' : event?.imageUrl || '',
   });
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -75,7 +76,7 @@ function EventForm({
       ...formData,
       basePrice: Number(formData.basePrice),
       capacity: Number(formData.capacity),
-      imageUrl: event?.imageUrl || `https://picsum.photos/seed/${formData.title.replace(/\s+/g, '-')}/400/200`,
+      imageUrl: formData.imageUrl || `https://picsum.photos/seed/${formData.title.replace(/\s+/g, '-')}/400/200`,
       imageHint: event?.imageHint || 'event photo',
     };
 
@@ -113,6 +114,10 @@ function EventForm({
         <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea id="description" value={formData.description} onChange={handleChange} />
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor="imageUrl">Image URL</Label>
+            <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
