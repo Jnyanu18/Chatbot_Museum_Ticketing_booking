@@ -148,7 +148,7 @@ const chatbotBookTicketFlow = ai.defineFlow(
       ${museumAndEventContext}
 
       Always end booking-ready responses with: "Shall I confirm this booking now?" or "Would you like to change anything?"
-      If the user is not trying to book a ticket, or the conversation is not related to booking, just respond naturally and set both isBookingReady and isBookingComplete to false.
+      If the user is not trying to book a ticket, or the conversation is not related to booking, just respond naturally and set both isBookingReady and isBookingComplete to false. For non-booking queries, provide a helpful, conversational response.
       `,
       history: input.history,
       tools: [createBookingTool],
@@ -167,7 +167,7 @@ const chatbotBookTicketFlow = ai.defineFlow(
         return {
           isBookingReady: false,
           isBookingComplete: false,
-          followUpMessage: '', // Empty message signals fallback
+          followUpMessage: "I can help with museum information and ticket bookings. What would you like to do?",
           bookingData: undefined,
         }
       }
