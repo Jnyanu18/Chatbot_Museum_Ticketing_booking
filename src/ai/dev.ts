@@ -7,3 +7,4 @@ import '@/ai/flows/chatbot-recognizes-booking-intent.ts';
 import '@/ai/flows/translate-ui-chatbot-responses.ts';
 import '@/ai/flows/chatbot-suggest-visit-times.ts';
 import '@/ai/flows/get-project-suggestions.ts';
+import '@/ai/flows/get-analytics-summary.ts';
