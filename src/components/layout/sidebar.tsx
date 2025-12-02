@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   Lightbulb,
 } from 'lucide-react';
-import { useUser, useAuth } from '@/firebase';
+import { useUser, useAuth, useRole } from '@/firebase';
 import { signOut } from 'firebase/auth';
 
 import {
@@ -48,12 +48,10 @@ const adminLinks = [
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const { user, isUserLoading } = useUser();
+  const { isAdmin, isRoleLoading } = useRole();
   const auth = useAuth();
   const router = useRouter();
   
-  // This is a placeholder for role management.
-  // In a real app, this would come from custom claims or a database lookup.
-  const isAdmin = true; 
   const isViewingAdmin = pathname.startsWith('/admin');
 
   const isActive = (href: string) => {
@@ -81,48 +79,57 @@ export default function DashboardSidebar() {
       </SidebarHeader>
       <SidebarContent className="p-2">
           <SidebarMenu>
-            {linksToShow.map(link => (
-                <SidebarMenuItem key={link.href}>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isActive(link.href)}
-                        tooltip={{ children: link.label }}
-                    >
-                        <Link href={link.href}>
-                            <link.icon />
-                            <span>{link.label}</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            ))}
-             {isAdmin && !isViewingAdmin && (
-                <SidebarMenuItem>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isActive('/admin')}
-                        tooltip={{ children: "Admin Dashboard" }}
-                    >
-                        <Link href="/admin">
-                            <ShieldCheck />
-                            <span>Admin</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-             )}
-             {isAdmin && isViewingAdmin && (
-                <SidebarMenuItem>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isActive('/dashboard')}
-                        tooltip={{ children: "User Dashboard" }}
-                    >
-                        <Link href="/dashboard">
-                            <AreaChart />
-                            <span>User Dashboard</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-             )}
+            {(isUserLoading || isRoleLoading) ? (
+                <>
+                    <SidebarMenuSkeleton showIcon />
+                    <SidebarMenuSkeleton showIcon />
+                </>
+            ) : (
+                <>
+                    {linksToShow.map(link => (
+                        <SidebarMenuItem key={link.href}>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isActive(link.href)}
+                                tooltip={{ children: link.label }}
+                            >
+                                <Link href={link.href}>
+                                    <link.icon />
+                                    <span>{link.label}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                    {isAdmin && !isViewingAdmin && (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isActive('/admin')}
+                                tooltip={{ children: "Admin Dashboard" }}
+                            >
+                                <Link href="/admin">
+                                    <ShieldCheck />
+                                    <span>Admin</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    )}
+                    {isAdmin && isViewingAdmin && (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isActive('/dashboard')}
+                                tooltip={{ children: "User Dashboard" }}
+                            >
+                                <Link href="/dashboard">
+                                    <AreaChart />
+                                    <span>User Dashboard</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    )}
+                </>
+            )}
         </SidebarMenu>
         
       </SidebarContent>

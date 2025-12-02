@@ -215,35 +215,31 @@ service cloud.firestore {
      * @path /roles_admin/{uid}
      * @allow get: if isAdmin();
      * @allow list: if false;
-     * @allow create: if isAdmin();
+     * @allow create, delete: if isAdmin();
      * @allow update: if false;
-     * @allow delete: if isAdmin();
-     * @principle DBAC Existence over Content.
+     * @principle DBAC Existence over Content. Only Admins can manage other Admins.
      */
        match /roles_admin/{uid} {
-        allow get: if isAdmin();
-        allow list: if false;
-        allow create: if isAdmin();
+        allow get: if isAdmin() || isOwner(uid);
+        allow list: if isAdmin();
+        allow create, delete: if isAdmin();
         allow update: if false;
-        allow delete: if isAdmin();
     }
 
     /**
      * @description Rule for /roles_staff/{uid} documents.
      * @path /roles_staff/{uid}
-     * @allow get: if isStaff();
-     * @allow list: if false;
-     * @allow create: if isStaff();
+     * @allow get: if isStaff() || isAdmin();
+     * @allow list: if isAdmin();
+     * @allow create, delete: if isAdmin();
      * @allow update: if false;
-     * @allow delete: if isStaff();
-_     * @principle DBAC Existence over Content.
+_     * @principle DBAC Existence over Content. Only Admins can manage staff.
      */
       match /roles_staff/{uid} {
-        allow get: if isStaff();
-        allow list: if false;
-        allow create: if isStaff();
+        allow get: if isStaff() || isAdmin();
+        allow list: if isAdmin();
+        allow create, delete: if isAdmin();
         allow update: if false;
-        allow delete: if isStaff();
     }
   }
 }
