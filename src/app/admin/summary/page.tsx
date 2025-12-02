@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2, Sparkles, AlertTriangle, CheckCircle, BarChart, TrendingUp, Users, Ticket } from 'lucide-react';
+import { Loader2, Sparkles, AlertTriangle, CheckCircle, BarChart, TrendingUp, Calendar, Users } from 'lucide-react';
 import { getAnalyticsSummary } from '@/ai/flows/get-analytics-summary';
 import type { AnalyticsSummary } from '@/ai/flows/get-analytics-summary';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -129,7 +129,7 @@ export default function SummaryPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
              <SummaryStatCard title="Total Visitors" value={summary.summary.total_visitors.toLocaleString()} icon={Users} />
              <SummaryStatCard title="Total Revenue" value={`$${summary.summary.total_revenue.toLocaleString()}`} icon={TrendingUp} />
-             <SummaryStatCard title="Peak Day" value={summary.summary.peak_day.split('-')[2]} icon={Calendar} />
+             <SummaryStatCard title="Peak Day" value={new Date(summary.summary.peak_day).toLocaleDateString('en-US', { weekday: 'long'})} icon={Calendar} />
              <SummaryStatCard title="Avg. Revenue / Visitor" value={`$${summary.summary.avg_revenue_per_visitor.toFixed(2)}`} icon={BarChart} />
           </div>
 
@@ -161,6 +161,23 @@ export default function SummaryPage() {
                 ))}
             </CardContent>
           </Card>
+           {summary.data_issues.length > 0 && (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-amber-600">Data Quality Issues</CardTitle>
+                    <CardDescription>The following data sources were missing, which may affect analysis quality.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                        {summary.data_issues.map((issue, index) => (
+                            <li key={index}>
+                                <span className="font-semibold">{issue.collection}:</span> {issue.issue} - {issue.detail}
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+            </Card>
+           )}
 
         </div>
       )}
