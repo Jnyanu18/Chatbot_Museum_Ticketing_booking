@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -136,7 +137,6 @@ export default function MuseumsPage() {
         const newMuseum = {
             ...museumData,
             id: `museum-${Date.now()}`,
-            createdAt: new Date(),
         } as Museum;
         setMuseums([newMuseum, ...museums]);
     }

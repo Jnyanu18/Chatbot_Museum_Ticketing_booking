@@ -8,10 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import BookingsOverTimeChart from '@/components/charts/bookings-over-time-chart';
 import RevenueByMuseumChart from '@/components/charts/revenue-by-museum-chart';
-import { bookingsOverTimeData, revenueByMuseumData } from '@/lib/data';
+import { bookingsOverTimeData, revenueByMuseumData, MUSEUMS, EVENTS } from '@/lib/data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import type { User, Museum, Event } from '@/lib/types';
+import type { User } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const managementSections = [
@@ -38,21 +38,19 @@ const managementSections = [
         description: "Get a comprehensive AI-generated report on museum performance.",
         href: "/admin/summary",
         icon: Newspaper,
-    }
+    },
 ]
 
 export default function AdminDashboardPage() {
   const firestore = useFirestore();
 
   const usersQuery = useMemo(() => firestore ? collection(firestore, 'users') : null, [firestore]);
-  const museumsQuery = useMemo(() => firestore ? collection(firestore, 'museums') : null, [firestore]);
-  const eventsQuery = useMemo(() => firestore ? collection(firestore, 'events') : null, [firestore]);
 
   const { data: users, isLoading: usersLoading } = useCollection<User>(usersQuery);
-  const { data: museums, isLoading: museumsLoading } = useCollection<Museum>(museumsQuery);
-  const { data: events, isLoading: eventsLoading } = useCollection<Event>(eventsQuery);
-
-  const isLoading = usersLoading || museumsLoading || eventsLoading;
+  const museums = MUSEUMS;
+  const events = EVENTS;
+  
+  const isLoading = usersLoading;
 
   const quickStats = [
     { title: "Total Users", value: users?.length ?? 0, icon: Users },
@@ -76,7 +74,7 @@ export default function AdminDashboardPage() {
                         <stat.icon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        {isLoading ? (
+                        {isLoading && stat.title === 'Total Users' ? (
                             <Skeleton className="h-8 w-16" />
                         ) : (
                             <div className="text-2xl font-bold">{stat.value}</div>
