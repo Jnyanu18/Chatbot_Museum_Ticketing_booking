@@ -155,6 +155,48 @@ export const EVENTS: Event[] = [
     imageUrl: 'https://picsum.photos/seed/event-5/400/200',
     imageHint: 'buddhist art',
   },
+  {
+    id: 'event-6',
+    museumId: 'museum-3',
+    title: 'Roman Britain',
+    description: 'Discover the story of Roman Britain, from the conquest to the end of Roman rule.',
+    date: '2024-10-05',
+    startTime: '10:00',
+    endTime: '17:30',
+    capacity: 120,
+    bookedCount: 30,
+    basePrice: 18,
+    imageUrl: 'https://picsum.photos/seed/event-6/400/200',
+    imageHint: 'roman artifacts'
+  },
+  {
+    id: 'event-7',
+    museumId: 'museum-5',
+    title: 'Dutch Golden Age',
+    description: 'Experience the art of Rembrandt, Vermeer, and other masters of the Dutch Golden Age.',
+    date: '2024-10-15',
+    startTime: '09:00',
+    endTime: '17:00',
+    capacity: 250,
+    bookedCount: 180,
+    basePrice: 20,
+    imageUrl: 'https://picsum.photos/seed/event-7/400/200',
+    imageHint: 'dutch painting'
+  },
+  {
+    id: 'event-8',
+    museumId: 'museum-7',
+    title: 'Miniature Painting Gallery',
+    description: 'A stunning collection of Indian miniature paintings from various schools.',
+    date: '2024-11-01',
+    startTime: '10:15',
+    endTime: '18:00',
+    capacity: 80,
+    bookedCount: 15,
+    basePrice: 12,
+    imageUrl: 'https://picsum.photos/seed/event-8/400/200',
+    imageHint: 'indian painting'
+  },
 ];
 
 export const BOOKINGS: Booking[] = [
@@ -200,29 +242,58 @@ export const BOOKINGS: Booking[] = [
         museumName: 'The Metropolitan Museum of Art',
         eventDate: '2024-09-01'
     },
+    {
+        id: 'booking-4',
+        userId: 'user-456',
+        eventId: 'event-4',
+        museumId: 'museum-6',
+        numTickets: 3,
+        pricePaid: 30,
+        currency: 'USD',
+        status: 'paid',
+        createdAt: new Date('2024-08-01T11:00:00Z'),
+        eventTitle: 'Harappan Civilization Gallery',
+        museumName: 'National Museum, New Delhi',
+        eventDate: '2024-09-10'
+    },
+    {
+        id: 'booking-5',
+        userId: 'user-789',
+        eventId: 'event-7',
+        museumId: 'museum-5',
+        numTickets: 2,
+        pricePaid: 40,
+        currency: 'EUR',
+        status: 'cancelled',
+        createdAt: new Date('2024-08-05T18:00:00Z'),
+        eventTitle: 'Dutch Golden Age',
+        museumName: 'Rijksmuseum',
+        eventDate: '2024-10-15'
+    },
 ];
 
 
 // MOCK DATA FOR CHARTS
 
 export const bookingsOverTimeData = [
-  { date: "2024-07-01", Bookings: 240, },
-  { date: "2024-07-02", Bookings: 190, },
-  { date: "2024-07-03", Bookings: 320, },
-  { date: "2024-07-04", Bookings: 210, },
-  { date: "2024-07-05", Bookings: 450, },
-  { date: "2024-07-06", Bookings: 300, },
-  { date: "2024-07-07", Bookings: 280, },
-  { date: "2024-07-08", Bookings: 350, },
+  { date: "2024-07-01", Bookings: 240, }, { date: "2024-07-02", Bookings: 190, },
+  { date: "2024-07-03", Bookings: 320, }, { date: "2024-07-04", Bookings: 210, },
+  { date: "2024-07-05", Bookings: 450, }, { date: "2024-07-06", Bookings: 300, },
+  { date: "2024-07-07", Bookings: 280, }, { date: "2024-07-08", Bookings: 350, },
+  { date: "2024-07-09", Bookings: 290, }, { date: "2024-07-10", Bookings: 310, },
+  { date: "2024-07-11", Bookings: 260, }, { date: "2024-07-12", Bookings: 480, },
+  { date: "2024-07-13", Bookings: 510, }, { date: "2024-07-14", Bookings: 490, },
 ];
 
 export const revenueByMuseumData = [
     { name: "The Met", revenue: 45000 },
     { name: "Louvre", revenue: 38000 },
-    { name: "British Museum", revenue: 29000 },
+    { name: "British", revenue: 29000 },
     { name: "Prado", revenue: 22000 },
-    { name: "Rijksmuseum", revenue: 18000 },
-    { name: "National Museum", revenue: 15000 },
+    { name: "Rijks.", revenue: 18000 },
+    { name: "National", revenue: 15000 },
+    { name: "CSMVS", revenue: 12000 },
+    { name: "Indian", revenue: 9000 },
 ];
 
 export const peakHoursData = [
@@ -230,7 +301,7 @@ export const peakHoursData = [
   { hour: "11", visitors: 350 }, { hour: "12", visitors: 410 },
   { hour: "13", visitors: 380 }, { hour: "14", visitors: 450 },
   { hour: "15", visitors: 320 }, { hour: "16", visitors: 280 },
-  { hour: "17", visitors: 150 },
+  { hour: "17", visitors: 150 }, { hour: "18", visitors: 90 },
 ];
 
 export const languageDistributionData = [
@@ -255,6 +326,8 @@ export const qrVerificationData = [
   { date: "2024-07-04", expected: 210, scanned: 200 },
   { date: "2024-07-05", expected: 450, scanned: 430 },
   { date: "2024-07-06", expected: 300, scanned: 290 },
+  { date: "2024-07-07", expected: 280, scanned: 275 },
+  { date: "2024-07-08", expected: 350, scanned: 340 },
 ];
 
 export const chatbotPerformanceData = [
@@ -262,18 +335,22 @@ export const chatbotPerformanceData = [
     { intent: 'faq_hours', success: 98, failed: 2 },
     { intent: 'faq_location', success: 95, failed: 5 },
     { intent: 'faq_events', success: 92, failed: 8 },
+    { intent: 'faq_other', success: 70, failed: 30 },
 ];
 
 export const abandonedBookingsData = [
     { museum: 'The Met', count: 25 },
     { museum: 'Louvre', count: 18 },
-    { museum: 'British Museum', count: 12 },
+    { museum: 'British', count: 12 },
+    { museum: 'Prado', count: 9 },
+    { museum: 'Rijks.', count: 5 },
 ];
 
 export const PROMOTIONS: Promotion[] = [
     { id: 'promo-1', title: 'Summer Special', description: '15% off on all tickets', discountPercent: 15, code: 'SUMMER15', active: true, targetDays: ['Saturday', 'Sunday'] },
     { id: 'promo-2', title: 'Family Pack', description: '20% off for family bookings of 4+', discountPercent: 20, code: 'FAMILY20', active: true },
     { id: 'promo-3', title: 'Weekday Wonders', description: '15% off on Tuesday-Thursday tickets', discountPercent: 15, code: 'WEEKDAY15', active: true, targetDays: ['Tuesday', 'Wednesday', 'Thursday'] },
+    { id: 'promo-4', title: 'Early Bird', description: '10% off for bookings made 30 days in advance', discountPercent: 10, code: 'EARLYBIRD10', active: false },
 ];
 
 export const promotionEffectivenessData = [
