@@ -99,6 +99,10 @@ export default function AdminLoginPage() {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login as Admin
             </Button>
+             <p className="text-center text-sm text-muted-foreground">
+              This is the dedicated admin login. For user login, please visit the main{' '}
+              <Link href="/login" className="underline text-primary">login page</Link>.
+            </p>
           </form>
         </CardContent>
       </Card>

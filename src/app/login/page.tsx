@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Building2, KeyRound, Mail, Phone, Loader2 } from 'lucide-react';
+import { Building2, KeyRound, Mail, Phone, Loader2, Shield, User } from 'lucide-react';
 import { useAuth } from '@/firebase';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
@@ -20,13 +19,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingRole, setLoadingRole] = useState<'user' | 'admin' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (role: 'user' | 'admin') => {
+    setLoadingRole(role);
     setIsLoading(true);
     setError(null);
     try {
@@ -35,10 +35,11 @@ export default function LoginPage() {
         title: 'Login Successful',
         description: "Welcome back!",
       });
-      router.push('/dashboard');
+      router.push(role === 'admin' ? '/admin' : '/dashboard');
     } catch (err: any) {
       setError(err.message);
       setIsLoading(false);
+      setLoadingRole(null);
     }
   };
   
@@ -53,12 +54,11 @@ export default function LoginPage() {
         description: "Welcome!",
       });
       router.push('/dashboard');
-    } catch (err: any) {
+    } catch (err: any) -> {
       setError(err.message);
       setIsLoading(false);
     }
   };
-
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
@@ -81,7 +81,7 @@ export default function LoginPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -113,11 +113,18 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Login
-            </Button>
-          </form>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={() => handleLogin('user')} className="w-full" disabled={isLoading}>
+                {isLoading && loadingRole === 'user' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <User className="mr-2 h-4 w-4" />}
+                Login as User
+              </Button>
+               <Button onClick={() => handleLogin('admin')} className="w-full" variant="secondary" disabled={isLoading}>
+                {isLoading && loadingRole === 'admin' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shield className="mr-2 h-4 w-4" />}
+                Login as Admin
+              </Button>
+            </div>
+
+          </div>
           <div className="mt-4 text-center text-sm">
             <Link href="#" className="underline">
               Forgot your password?
