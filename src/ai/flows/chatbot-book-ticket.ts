@@ -130,8 +130,33 @@ const chatbotBookTicketFlow = ai.defineFlow(
       ${EVENTS.map(e => `- "${e.title}" (ID: ${e.id}) at Museum ID ${e.museumId}`).join('\n')}
     `;
 
+    // Add few-shot examples to teach the model the desired conversational style and JSON output.
+    const fewShotExamples = [
+        {
+            role: 'user',
+            content: 'I want to visit the Art Museum tomorrow.'
+        },
+        {
+            role: 'assistant',
+            content: 'Great — which time would you prefer: morning (09:00-12:00), afternoon (12:00-16:00) or evening (16:00-19:00)?'
+        },
+        {
+            role: 'user',
+            content: 'I have all the info, please book it'
+        },
+        {
+            role: 'assistant',
+            content: `
+\`\`\`json
+{ "intent": "book_ticket", "museum": "City Art Museum", "visit_date":"2025-12-15", "visit_time":"11:00", "tickets_count":2, "ticket_type":"adult", "visitor_names":["Asha Rao","Rohan Rao"], "contact_email":"asha@example.com", "contact_phone":"+91-9876543210", "payment_required":true, "payment_amount":600.0, "payment_currency":"INR", "special_requests":"wheelchair access", "booking_ref": null }
+\`\`\`
+
+Summary: I’ll book 2 adult tickets for City Art Museum on Dec 15, 2025 at 11:00. Total ₹600. Wheelchair access requested. Shall I confirm this booking now?`
+        }
+    ];
+
     const llmResponse = await ai.generate({
-      prompt: `You are MuseBot — a friendly, conversational ticket-booking assistant for museums. Your goals:
+      system: `You are MuseBot — a friendly, conversational ticket-booking assistant for museums. Your goals:
       1. Gather booking info via short natural chat (slot-filling): museum, visit_date (YYYY-MM-DD), visit_time (HH:MM or "morning/afternoon/evening"), tickets_count, ticket_type (adult/child/student/senior), visitor_names (optional), contact_email, contact_phone, payment_method (card/upi/cash/none), special_requests (optional).
       2. Always be polite, helpful, concise, and confirm ambiguous inputs.
       3. Ask only one question at a time. Validate user answers (dates in future, numbers positive, email format). If invalid, ask a corrective question.
@@ -150,25 +175,20 @@ const chatbotBookTicketFlow = ai.defineFlow(
       Always end booking-ready responses with: "Shall I confirm this booking now?" or "Would you like to change anything?"
       If the user is not trying to book a ticket, or the conversation is not related to booking, just respond naturally and set both isBookingReady and isBookingComplete to false. For non-booking queries, provide a helpful, conversational response.
       `,
-      history: input.history,
+      history: [...fewShotExamples, ...input.history],
       tools: [createBookingTool],
       output: {
         schema: ChatbotBookTicketOutputSchema
       }
     });
     
-    // Ensure we always return a valid output, even if the model fails to generate one.
     const output = llmResponse.output;
     if (output) {
-      // If the booking is not ready and not complete, but there's a follow up, it's just a regular chat turn.
-      // If there's no follow-up, it means the conversation is likely not about booking.
-      // In this case, we allow the main action handler to fall back to the FAQ flow.
       if (!output.isBookingReady && !output.isBookingComplete && !output.followUpMessage) {
         return {
           isBookingReady: false,
           isBookingComplete: false,
           followUpMessage: "I can help with museum information and ticket bookings. What would you like to do?",
-          bookingData: undefined,
         }
       }
       return output;
