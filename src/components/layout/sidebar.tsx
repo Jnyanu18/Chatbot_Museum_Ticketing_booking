@@ -13,6 +13,7 @@ import {
   Users,
   LogOut,
   ShieldCheck,
+  Lightbulb,
 } from 'lucide-react';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -38,6 +39,7 @@ const commonLinks = [
 const adminLinks = [
   { href: '/admin', label: 'Admin Dashboard', icon: ShieldCheck },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart },
+  { href: '/admin/suggestions', label: 'AI Suggestions', icon: Lightbulb },
   { href: '/admin/museums', label: 'Museums', icon: Building2 },
   { href: '/admin/events', label: 'Events', icon: Calendar },
   { href: '/admin/users', label: 'Users', icon: Users },
