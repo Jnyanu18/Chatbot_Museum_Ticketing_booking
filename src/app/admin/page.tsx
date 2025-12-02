@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo } from 'react';
-import { BarChart, Building2, Calendar, Users } from 'lucide-react';
+import { BarChart, Building2, Calendar, Users, Lightbulb, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
         title: 'Admin Login Successful',
         description: "Welcome back, Admin!",
       });
-      router.push('/dashboard');
+      router.push('/admin');
     } catch (err: any) {
       setError(err.message);
       setIsLoading(false);
